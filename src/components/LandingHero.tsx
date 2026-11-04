@@ -11,23 +11,21 @@ import {
   UserPlus,
   ShieldCheck,
   Zap,
-  Users,
-  Shield
+  Users
 } from 'lucide-react'
 
 interface LandingHeroProps {
   onLoginClick: () => void
   onRegisterClick: () => void
   onServiceClick: (serviceId: string) => void
-  onAdminClick: () => void
 }
 
 const CORE_SERVICES = [
   { id: 'pan-new', label: 'PAN Card New', color: '#7C3AED', icon: CreditCard },
-  { id: 'pan-corr', label: 'PAN Correction', color: '#9333EA', icon: FileText },
+  { id: 'pan-corr', label: 'PAN Card Correction', color: '#9333EA', icon: FileText },
   { id: 'pan-finder', label: 'PAN Finder', color: '#2563EB', icon: Search },
   { id: 'pan-no-dob', label: 'Without Birth Proof PAN', color: '#DC2626', icon: AlertCircle },
-  { id: 'dl-rc', label: 'DL / RC Download', color: '#EA580C', icon: FileCheck },
+  { id: 'dl-download', label: 'DL PDF Download', color: '#EA580C', icon: FileCheck },
   { id: 'll-exam', label: 'Learning License Exam', color: '#7C3AED', icon: GraduationCap },
   { id: 'tec-cert', label: 'TEC Certificate', color: '#059669', icon: Award }
 ]
@@ -35,19 +33,12 @@ const CORE_SERVICES = [
 export const LandingHero: React.FC<LandingHeroProps> = ({
   onLoginClick,
   onRegisterClick,
-  onServiceClick,
-  onAdminClick
+  onServiceClick
 }) => {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#E85D04]/30 selection:text-white">
       {/* Hero Section */}
-      <section className="pt-12 pb-16 px-4 sm:px-6 text-center max-w-5xl mx-auto">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E85D04]/10 border border-[#E85D04]/30 text-xs font-semibold text-[#E85D04] mb-8 uppercase tracking-wider">
-          <span className="text-sm">🇮🇳</span>
-          <span>India's Trusted Retailer Portal</span>
-        </div>
-
+      <section className="pt-16 pb-16 px-4 sm:px-6 text-center max-w-5xl mx-auto">
         {/* Hero Image */}
         <div className="relative mb-6">
           <img
@@ -68,10 +59,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         </p>
 
         {/* Primary Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-14">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
           <button
             onClick={onLoginClick}
-            className="w-full sm:w-auto px-8 py-3.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#E85D04]/30 active:scale-95"
+            className="w-full sm:w-auto px-9 py-3.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#E85D04]/30 active:scale-95"
           >
             <span>Login to Portal</span>
             <ArrowRight size={17} />
@@ -79,18 +70,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           <button
             onClick={onRegisterClick}
-            className="w-full sm:w-auto px-7 py-3.5 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
+            className="w-full sm:w-auto px-8 py-3.5 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
           >
             <UserPlus size={17} />
             <span>New Retailer? Register</span>
-          </button>
-
-          <button
-            onClick={onAdminClick}
-            className="w-full sm:w-auto px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-amber-500/30 text-amber-300 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            <Shield size={17} className="text-amber-400" />
-            <span>Admin Portal</span>
           </button>
         </div>
 
@@ -121,7 +104,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         {/* 3 Stats Cards */}
         <div className="grid grid-cols-3 gap-3.5 max-w-md mx-auto">
           {[
-            { value: '11+', label: 'Services' },
+            { value: '10+', label: 'Services' },
             { value: 'Fast', label: 'Processing' },
             { value: '24/7', label: 'Support' }
           ].map((st) => (

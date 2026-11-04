@@ -12,7 +12,12 @@ import {
   MessageSquare,
   Eye,
   ArrowLeft,
-  X
+  X,
+  Lock,
+  User,
+  KeyRound,
+  LogOut,
+  AlertCircle
 } from 'lucide-react'
 
 interface AdminPortalProps {
@@ -20,6 +25,11 @@ interface AdminPortalProps {
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
+  const [adminUsername, setAdminUsername] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminError, setAdminError] = useState<string | null>(null)
+
   const [activeTab, setActiveTab] = useState<'orders' | 'retailers' | 'complaints'>('orders')
   const [orders, setOrders] = useState<Order[]>([])
   const [retailers, setRetailers] = useState<Retailer[]>([])
@@ -28,32 +38,59 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  // Selected order for details modal
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-
-  // Wallet adjustment modal
   const [walletModalRetailer, setWalletModalRetailer] = useState<Retailer | null>(null)
   const [adjustAmount, setAdjustAmount] = useState('500')
+
+  // Check if admin is logged in
+  useEffect(() => {
+    const savedAdmin = localStorage.getItem('treta_admin_auth')
+    if (savedAdmin === 'true') {
+      setIsAdminLoggedIn(true)
+      loadAllData()
+    }
+  }, [])
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    setAdminError(null)
+
+    if (adminUsername.trim() === 'admin' && adminPassword === 'admin123') {
+      setIsAdminLoggedIn(true)
+      localStorage.setItem('treta_admin_auth', 'true')
+      loadAllData()
+    } else {
+      setAdminError('Invalid credentials! Username is "admin" and Password is "admin123".')
+    }
+  }
+
+  const handleAdminLogout = () => {
+    setIsAdminLoggedIn(false)
+    localStorage.removeItem('treta_admin_auth')
+  }
+
+  const handleFillAdminCredentials = () => {
+    setAdminUsername('admin')
+    setAdminPassword('admin123')
+    setAdminError(null)
+  }
 
   // Load all data from Supabase
   const loadAllData = async () => {
     setLoading(true)
     try {
-      // 1. Fetch Orders
       const { data: ordData } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false })
       if (ordData) setOrders(ordData as Order[])
 
-      // 2. Fetch Retailers
       const { data: retData } = await supabase
         .from('retailers')
         .select('*')
         .order('created_at', { ascending: false })
       if (retData) setRetailers(retData as Retailer[])
 
-      // 3. Fetch Complaints
       const { data: compData } = await supabase
         .from('complaints')
         .select('*')
@@ -66,11 +103,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
     }
   }
 
-  useEffect(() => {
-    loadAllData()
-  }, [])
-
-  // Update order status in Supabase
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       await supabase.from('orders').update({ status: newStatus }).eq('id', orderId)
@@ -85,7 +117,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
     }
   }
 
-  // Adjust retailer wallet balance
   const handleSaveWalletAdjustment = async () => {
     if (!walletModalRetailer) return
     const add = parseFloat(adjustAmount)
@@ -99,7 +130,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
     setWalletModalRetailer(null)
   }
 
-  // Toggle complaint status
   const handleToggleComplaint = async (tktId: string, curStatus: string) => {
     const newStatus = curStatus === 'open' ? 'resolved' : 'open'
     await supabase.from('complaints').update({ status: newStatus }).eq('id', tktId)
@@ -108,14 +138,112 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
     )
   }
 
-  // Stats calculation
+  // 1. ADMIN LOGIN GATE
+  if (!isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-black border border-white/20 rounded-3xl p-7 shadow-2xl text-white">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3">
+              <Shield className="h-8 w-8 text-amber-400" />
+            </div>
+            <h2 className="text-2xl font-extrabold tracking-tight">
+              Treta <span className="text-[#E85D04]">Master Admin</span>
+            </h2>
+            <p className="text-xs text-white/50 mt-1">Authorized Access Only</p>
+          </div>
+
+          {/* Prominent Credentials Box */}
+          <div className="mb-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-bold text-amber-300 uppercase tracking-wider text-[11px]">
+                🔑 Admin Credentials
+              </span>
+              <button
+                type="button"
+                onClick={handleFillAdminCredentials}
+                className="flex items-center gap-1 bg-amber-400 hover:bg-amber-500 text-black font-extrabold px-2.5 py-1 rounded-lg text-[10px] transition-all"
+              >
+                <KeyRound size={12} />
+                <span>Auto Fill</span>
+              </button>
+            </div>
+            <div className="space-y-1 font-mono text-white/80">
+              <div>Username: <strong className="text-white">admin</strong></div>
+              <div>Password: <strong className="text-white">admin123</strong></div>
+            </div>
+          </div>
+
+          {adminError && (
+            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle size={16} />
+              <span>{adminError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-white/70 block mb-1">
+                Admin Username
+              </label>
+              <div className="relative">
+                <User size={16} className="absolute left-3.5 top-3 text-white/40" />
+                <input
+                  type="text"
+                  placeholder="admin"
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-white/5 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-white/70 block mb-1">
+                Admin Password
+              </label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3.5 top-3 text-white/40" />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-white/5 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#E85D04]/30 transition-all active:scale-98"
+            >
+              Sign In to Master Admin
+            </button>
+          </form>
+
+          <div className="mt-5 text-center">
+            <button
+              onClick={onBackToHome}
+              className="text-xs text-white/40 hover:text-white transition-colors"
+            >
+              ← Back to Retailer Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 2. ADMIN DASHBOARD CONTENT
   const totalOrders = orders.length
   const pendingOrders = orders.filter((o) => o.status === 'pending').length
   const completedOrders = orders.filter((o) => o.status === 'completed').length
   const totalRetailers = retailers.length
   const totalWalletVolume = retailers.reduce((acc, r) => acc + Number(r.wallet || 0), 0)
 
-  // Filtered orders
   const filteredOrders = orders.filter((o) => {
     const matchesStatus = statusFilter === 'all' || o.status === statusFilter
     const q = searchQuery.toLowerCase()
@@ -165,10 +293,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
           </button>
 
           <button
-            onClick={onBackToHome}
-            className="px-4 py-2 bg-[#E85D04] hover:bg-[#cc4f03] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-[#E85D04]/20"
+            onClick={handleAdminLogout}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl transition-all"
           >
-            Back to Retailer Portal
+            <LogOut size={14} />
+            <span>Admin Logout</span>
           </button>
         </div>
       </div>
@@ -181,7 +310,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
             <Users size={16} className="text-[#E85D04]" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white">{totalRetailers}</div>
-          <span className="text-[10px] text-green-400 font-medium">Active Retailers registered</span>
+          <span className="text-[10px] text-green-400 font-medium">Registered Retailers</span>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -190,7 +319,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
             <FileCheck2 size={16} className="text-blue-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white">{totalOrders}</div>
-          <span className="text-[10px] text-white/40">Processed across all services</span>
+          <span className="text-[10px] text-white/40">Total orders submitted</span>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -199,7 +328,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
             <Clock size={16} className="text-amber-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-amber-400">{pendingOrders}</div>
-          <span className="text-[10px] text-amber-400/80">Requires processing / slip upload</span>
+          <span className="text-[10px] text-amber-400/80">Requires processing</span>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -210,11 +339,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
           <div className="text-2xl sm:text-3xl font-extrabold text-green-400">
             ₹{totalWalletVolume.toFixed(2)}
           </div>
-          <span className="text-[10px] text-white/40">Cumulative wallet balances</span>
+          <span className="text-[10px] text-white/40">Total in retailer balances</span>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-4 mb-6 text-xs font-semibold">
         <button
           onClick={() => setActiveTab('orders')}
@@ -253,16 +382,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
         </button>
       </div>
 
-      {/* Tab 1: Orders / Applications List */}
+      {/* Tab 1: Orders */}
       {activeTab === 'orders' && (
         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-          {/* Filter Bar */}
           <div className="p-4 border-b border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-black/40">
             <div className="relative flex-1 max-w-md">
               <Search size={15} className="absolute left-3.5 top-3 text-white/40" />
               <input
                 type="text"
-                placeholder="Search by order ID, applicant, service, mobile, ref no..."
+                placeholder="Search order ID, applicant, service, mobile, ref no..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#E85D04]"
@@ -285,7 +413,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
             </div>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-white/5 text-white/50 uppercase tracking-wider text-[10px] border-b border-white/10">
@@ -296,15 +423,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
                   <th className="p-3.5">Retailer</th>
                   <th className="p-3.5">Fee</th>
                   <th className="p-3.5">Current Status</th>
-                  <th className="p-3.5">Actions / Status Changer</th>
-                  <th className="p-3.5">View</th>
+                  <th className="p-3.5">Status Updater</th>
+                  <th className="p-3.5">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
                 {filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="p-8 text-center text-white/40">
-                      No applications found matching criteria.
+                      No applications found.
                     </td>
                   </tr>
                 ) : (
@@ -350,7 +477,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
                                 onClick={() => handleUpdateOrderStatus(ord.id, 'completed')}
                                 className="px-2 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded text-[10px] font-bold"
                               >
-                                Approve & Complete
+                                Complete
                               </button>
                             )}
                             {ord.status === 'pending' && (
@@ -358,7 +485,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
                                 onClick={() => handleUpdateOrderStatus(ord.id, 'processing')}
                                 className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[10px] font-bold"
                               >
-                                In Progress
+                                Process
                               </button>
                             )}
                             {ord.status !== 'rejected' && ord.status !== 'completed' && (
@@ -395,7 +522,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
           <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
               <Users size={16} className="text-[#E85D04]" />
-              <span>Registered Retailers on Treta Enterprises</span>
+              <span>Registered Retailers</span>
             </h3>
             <span className="text-xs text-white/40">{retailers.length} Retailers</span>
           </div>
@@ -404,34 +531,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
             <table className="w-full text-left text-xs">
               <thead className="bg-white/5 text-white/50 uppercase tracking-wider text-[10px] border-b border-white/10">
                 <tr>
-                  <th className="p-3.5">Retailer Name</th>
+                  <th className="p-3.5">Retailer</th>
                   <th className="p-3.5">Mobile</th>
                   <th className="p-3.5">Email</th>
                   <th className="p-3.5">Wallet Balance</th>
-                  <th className="p-3.5">Joined Date</th>
+                  <th className="p-3.5">Joined</th>
                   <th className="p-3.5">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
                 {retailers.map((ret) => (
                   <tr key={ret.id} className="hover:bg-white/[0.04]">
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#E85D04] text-white font-bold flex items-center justify-center text-xs">
-                          {ret.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <span className="font-semibold text-white block">{ret.name}</span>
-                          <span className="text-[10px] text-white/40 font-mono">{ret.id}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-mono text-white font-semibold">{ret.mobile}</td>
+                    <td className="p-3.5 font-semibold text-white">{ret.name}</td>
+                    <td className="p-3.5 font-mono text-white">{ret.mobile}</td>
                     <td className="p-3.5 text-white/60">{ret.email || 'N/A'}</td>
-                    <td className="p-3.5">
-                      <span className="text-sm font-extrabold text-green-400">
-                        ₹{Number(ret.wallet).toFixed(2)}
-                      </span>
+                    <td className="p-3.5 font-bold text-green-400">
+                      ₹{Number(ret.wallet).toFixed(2)}
                     </td>
                     <td className="p-3.5 text-white/40">
                       {new Date(ret.created_at).toLocaleDateString()}
@@ -439,7 +554,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
                     <td className="p-3.5">
                       <button
                         onClick={() => setWalletModalRetailer(ret)}
-                        className="px-2.5 py-1 bg-[#E85D04]/10 hover:bg-[#E85D04]/20 border border-[#E85D04]/40 text-[#E85D04] rounded-lg text-[11px] font-bold transition-all"
+                        className="px-2.5 py-1 bg-[#E85D04]/10 hover:bg-[#E85D04]/20 border border-[#E85D04]/40 text-[#E85D04] rounded-lg text-[11px] font-bold"
                       >
                         Adjust Wallet
                       </button>
@@ -458,7 +573,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
           <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
               <MessageSquare size={16} className="text-[#E85D04]" />
-              <span>Retailer Support Tickets & Complaints</span>
+              <span>Complaints & Tickets</span>
             </h3>
             <span className="text-xs text-white/40">{complaints.length} Tickets</span>
           </div>
@@ -470,7 +585,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
                   <th className="p-3.5">Ticket ID</th>
                   <th className="p-3.5">Retailer</th>
                   <th className="p-3.5">Subject</th>
-                  <th className="p-3.5">Message / Details</th>
+                  <th className="p-3.5">Details</th>
                   <th className="p-3.5">Status</th>
                   <th className="p-3.5">Action</th>
                 </tr>
@@ -596,7 +711,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToHome }) => {
         </div>
       )}
 
-      {/* Wallet Adjustment Modal */}
+      {/* Adjust Wallet Modal */}
       {walletModalRetailer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-sm bg-black border border-white/20 rounded-3xl p-6 shadow-2xl text-white">

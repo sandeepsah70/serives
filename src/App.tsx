@@ -12,29 +12,44 @@ export function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authInitialMode, setAuthInitialMode] = useState<'login' | 'register'>('login')
 
-  // Check URL path or query on mount
+  // Check URL path, hash, or query on mount
   useEffect(() => {
-    const path = window.location.pathname.toLowerCase()
-    const hash = window.location.hash.toLowerCase()
-    const search = window.location.search.toLowerCase()
+    const checkRoute = () => {
+      const path = window.location.pathname.toLowerCase()
+      const hash = window.location.hash.toLowerCase()
+      const search = window.location.search.toLowerCase()
 
-    if (path.endsWith('/admin') || hash === '#/admin' || hash === '#admin' || search.includes('admin')) {
-      setCurrentView('admin')
-    }
+      // Supports both /admin and /amin as requested!
+      if (
+        path.endsWith('/admin') ||
+        path.endsWith('/amin') ||
+        hash.includes('admin') ||
+        hash.includes('amin') ||
+        search.includes('admin') ||
+        search.includes('amin')
+      ) {
+        setCurrentView('admin')
+        return
+      }
 
-    // Try loading saved retailer session
-    const saved = localStorage.getItem('treta_retailer_session')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setCurrentRetailer(parsed)
-      } catch (e) {
-        console.error(e)
+      // Check saved retailer session
+      const saved = localStorage.getItem('treta_retailer_session')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          setCurrentRetailer(parsed)
+          setCurrentView('dashboard')
+        } catch (e) {
+          console.error(e)
+        }
       }
     }
+
+    checkRoute()
+    window.addEventListener('hashchange', checkRoute)
+    return () => window.removeEventListener('hashchange', checkRoute)
   }, [])
 
-  // Update hash when navigating to admin
   const handleNavigate = (view: 'home' | 'dashboard' | 'services' | 'admin') => {
     setCurrentView(view)
     if (view === 'admin') {
@@ -63,44 +78,33 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans">
-      <Navbar
-        currentRetailer={currentRetailer}
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        onOpenLogin={() => handleOpenLogin('login')}
-        onLogout={handleLogout}
-      />
+      {/* Navbar only shown on public landing pages when not in admin and not logged in */}
+      {currentView !== 'admin' && !currentRetailer && (
+        <Navbar
+          currentRetailer={currentRetailer}
+          onNavigate={handleNavigate}
+          onOpenLogin={() => handleOpenLogin('login')}
+        />
+      )}
 
       <main className="flex-1">
         {currentView === 'admin' ? (
           <AdminPortal onBackToHome={() => handleNavigate('home')} />
-        ) : currentView === 'dashboard' && currentRetailer ? (
+        ) : currentRetailer ? (
+          /* EXACT RETAILER DASHBOARD AS IN SCREENSHOT */
           <RetailerDashboard
             retailer={currentRetailer}
             onUpdateRetailer={(updated) => {
               setCurrentRetailer(updated)
               localStorage.setItem('treta_retailer_session', JSON.stringify(updated))
             }}
-            onAdminClick={() => handleNavigate('admin')}
+            onLogout={handleLogout}
           />
         ) : (
           <LandingHero
-            onLoginClick={() => {
-              if (currentRetailer) {
-                setCurrentView('dashboard')
-              } else {
-                handleOpenLogin('login')
-              }
-            }}
+            onLoginClick={() => handleOpenLogin('login')}
             onRegisterClick={() => handleOpenLogin('register')}
-            onServiceClick={(_serviceId) => {
-              if (currentRetailer) {
-                setCurrentView('dashboard')
-              } else {
-                handleOpenLogin('login')
-              }
-            }}
-            onAdminClick={() => handleNavigate('admin')}
+            onServiceClick={(_serviceId) => handleOpenLogin('login')}
           />
         )}
       </main>

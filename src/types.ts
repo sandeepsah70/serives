@@ -40,3 +40,4 @@ export interface ServiceItem {
   description: string
   requirements: string[]
 }
+
