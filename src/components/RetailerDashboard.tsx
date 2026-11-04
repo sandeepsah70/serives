@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import type { Retailer, Order, ServiceItem } from '../types'
 import { SERVICES_LIST } from '../servicesData'
 import { supabase } from '../supabaseClient'
+import { PaymentQRModal } from './PaymentQRModal'
 import {
   LayoutDashboard,
   Layers,
@@ -27,7 +28,9 @@ import {
   X,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  QrCode,
+  ShieldCheck
 } from 'lucide-react'
 
 interface RetailerDashboardProps {
@@ -57,9 +60,24 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
   const [submittingOrder, setSubmittingOrder] = useState(false)
   const [orderMsg, setOrderMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  // QR Payment Modal State
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [pendingOrderData, setPendingOrderData] = useState<{
+    orderId: string
+    service: ServiceItem
+    name: string
+    mobile: string
+    refNo: string
+    notes: string
+  } | null>(null)
+
   // Wallet add modal
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [rechargeAmt, setRechargeAmt] = useState('500')
+  const [showWalletQR, setShowWalletQR] = useState(false)
+
+  // Receipt Modal State
+  const [viewReceiptOrder, setViewReceiptOrder] = useState<Order | null>(null)
 
   // Complaint state
   const [complaintSubject, setComplaintSubject] = useState('')
@@ -99,7 +117,63 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
     setOrderMsg(null)
   }
 
-  const handleSubmitOrder = async (e: React.FormEvent) => {
+  // 1. Process payment via QR code
+  const handleInitiateQRPayment = () => {
+    if (!selectedService) return
+    if (!applicantName.trim() || !applicantMobile.trim()) {
+      setOrderMsg({ type: 'error', text: 'Please fill in applicant name and mobile.' })
+      return
+    }
+
+    const orderId = `ORD-${Date.now().toString().slice(-6)}`
+    setPendingOrderData({
+      orderId,
+      service: selectedService,
+      name: applicantName.trim(),
+      mobile: applicantMobile.trim(),
+      refNo: referenceNo.trim() || `REF-${Date.now().toString().slice(-6)}`,
+      notes: orderNotes.trim()
+    })
+    setShowQRModal(true)
+  }
+
+  // Handle successful QR payment confirmation
+  const handleQRPaymentSuccess = async (utrNumber: string) => {
+    if (!pendingOrderData) return
+
+    setSubmittingOrder(true)
+    try {
+      const newOrder: Order = {
+        id: pendingOrderData.orderId,
+        user_id: retailer.id,
+        retailer_name: retailer.name,
+        service_name: pendingOrderData.service.label,
+        applicant_name: pendingOrderData.name,
+        mobile: pendingOrderData.mobile,
+        reference_no: pendingOrderData.refNo,
+        fee: pendingOrderData.service.fee,
+        status: 'completed', // Instant verified on QR payment
+        notes: `Paid via UPI QR (UTR: ${utrNumber}). ${pendingOrderData.notes}`,
+        created_at: new Date().toISOString()
+      }
+
+      await supabase.from('orders').insert(newOrder)
+      setOrders((prev) => [newOrder, ...prev])
+
+      setShowQRModal(false)
+      setSelectedService(null)
+      setPendingOrderData(null)
+      setActiveMenu('orders')
+      setViewReceiptOrder(newOrder) // Open receipt
+    } catch (err: unknown) {
+      console.error(err)
+    } finally {
+      setSubmittingOrder(false)
+    }
+  }
+
+  // 2. Process payment via Wallet (ALLOWS NEGATIVE BALANCE!)
+  const handleSubmitOrderWallet = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedService) return
 
@@ -126,15 +200,20 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
 
       await supabase.from('orders').insert(newOrder)
 
-      const newBal = Math.max(0, Number(retailer.wallet) - selectedService.fee)
-      const updated = { ...retailer, wallet: newBal }
-      await supabase.from('retailers').update({ wallet: newBal }).eq('id', retailer.id)
+      // Wallet can go NEGATIVE (Credit balance allowed as requested!)
+      const currentWallet = Number(retailer.wallet || 0)
+      const newBalance = currentWallet - selectedService.fee
+
+      const updated = { ...retailer, wallet: newBalance }
+      await supabase.from('retailers').update({ wallet: newBalance }).eq('id', retailer.id)
       onUpdateRetailer(updated)
 
       setOrders((prev) => [newOrder, ...prev])
       setOrderMsg({
         type: 'success',
-        text: `Application submitted successfully! Order ID: ${newOrder.id}`
+        text: `Application submitted! Fee ₹${selectedService.fee} deducted. New balance: ₹${newBalance.toFixed(
+          2
+        )}`
       })
 
       setTimeout(() => {
@@ -149,15 +228,18 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
     }
   }
 
+  // Wallet recharge (turns negative balance positive!)
   const handleRechargeWallet = async () => {
     const add = parseFloat(rechargeAmt)
     if (isNaN(add) || add <= 0) return
 
-    const newBal = Number(retailer.wallet) + add
+    const currentWallet = Number(retailer.wallet || 0)
+    const newBal = currentWallet + add
     const updated = { ...retailer, wallet: newBal }
     await supabase.from('retailers').update({ wallet: newBal }).eq('id', retailer.id)
     onUpdateRetailer(updated)
     setShowWalletModal(false)
+    setShowWalletQR(false)
   }
 
   const handleSendComplaint = async (e: React.FormEvent) => {
@@ -182,7 +264,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
     setTimeout(() => setComplaintSuccess(false), 3000)
   }
 
-  // Icons mapper for exact screenshot matching
+  // Icons mapper matching screenshot
   const getServiceIcon = (id: string) => {
     switch (id) {
       case 'pan-no-dob':
@@ -212,6 +294,9 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
   const transportServices = SERVICES_LIST.filter((s) => s.category === 'TRANSPORT SERVICES')
   const educationServices = SERVICES_LIST.filter((s) => s.category === 'EDUCATION SERVICES')
 
+  const walletVal = Number(retailer.wallet || 0)
+  const isNegative = walletVal < 0
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-gray-900 flex font-sans antialiased">
       {/* 1. LEFT SIDEBAR (Dark - exactly as in screenshot) */}
@@ -230,19 +315,41 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
           </div>
 
           {/* Sidebar Wallet Card */}
-          <div className="mx-3 mt-4 mb-3 p-3 bg-[#1c140e] border border-[#E85D04]/25 rounded-2xl">
+          <div
+            onClick={() => setShowWalletModal(true)}
+            className={`mx-3 mt-4 mb-3 p-3 rounded-2xl cursor-pointer transition-all border ${
+              isNegative
+                ? 'bg-red-950/40 border-red-500/40'
+                : 'bg-[#1c140e] border-[#E85D04]/25 hover:border-[#E85D04]/50'
+            }`}
+          >
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#E85D04]">
+              <div
+                className={`flex items-center gap-2 text-xs font-semibold ${
+                  isNegative ? 'text-red-400' : 'text-[#E85D04]'
+                }`}
+              >
                 <Coins size={16} />
                 <span>Wallet</span>
               </div>
-              <span className="text-sm font-extrabold text-[#E85D04]">
-                ₹{Number(retailer.wallet).toFixed(0)}
+              <span
+                className={`text-sm font-extrabold ${
+                  isNegative ? 'text-red-400' : 'text-[#E85D04]'
+                }`}
+              >
+                {isNegative ? `-₹${Math.abs(walletVal).toFixed(0)}` : `₹${walletVal.toFixed(0)}`}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-white/50">
-              <Sparkles size={11} className="text-amber-400" />
-              <span>1 Free service available</span>
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="text-white/50 flex items-center gap-1">
+                <Sparkles size={11} className="text-amber-400" />
+                <span>1 Free service available</span>
+              </span>
+              {isNegative && (
+                <span className="text-[9px] bg-red-500/20 text-red-300 px-1 py-0.2 rounded font-bold">
+                  Due
+                </span>
+              )}
             </div>
           </div>
 
@@ -363,14 +470,18 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Wallet Pill */}
+            {/* Wallet Pill (Positive / Negative styled) */}
             <div
               onClick={() => setShowWalletModal(true)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fff7ed] border border-[#fed7aa] cursor-pointer hover:bg-[#ffedd5] transition-all"
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border cursor-pointer transition-all ${
+                isNegative
+                  ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                  : 'bg-[#fff7ed] border-[#fed7aa] text-[#E85D04] hover:bg-[#ffedd5]'
+              }`}
             >
-              <Coins size={15} className="text-[#E85D04]" />
-              <span className="text-xs font-bold text-[#E85D04]">
-                ₹{Number(retailer.wallet).toFixed(0)}
+              <Coins size={15} />
+              <span className="text-xs font-bold font-mono">
+                {isNegative ? `-₹${Math.abs(walletVal).toFixed(0)}` : `₹${walletVal.toFixed(0)}`}
               </span>
             </div>
 
@@ -402,13 +513,23 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                   <p className="text-xs text-gray-500 mt-0.5">Your Treta Enterprises portal</p>
                 </div>
 
+                {/* Big Wallet Pill with Add / Recharge button */}
                 <div
                   onClick={() => setShowWalletModal(true)}
-                  className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#fff7ed] border border-[#fed7aa] cursor-pointer shadow-sm hover:shadow transition-all"
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-2xl border cursor-pointer shadow-sm hover:shadow transition-all ${
+                    isNegative
+                      ? 'bg-red-50 border-red-300 text-red-600'
+                      : 'bg-[#fff7ed] border-[#fed7aa] text-[#E85D04]'
+                  }`}
                 >
-                  <Coins size={20} className="text-[#E85D04]" />
-                  <span className="text-xl font-extrabold text-[#E85D04]">
-                    ₹ {Number(retailer.wallet).toFixed(0)}
+                  <Coins size={20} />
+                  <span className="text-xl font-extrabold font-mono">
+                    {isNegative
+                      ? `- ₹ ${Math.abs(walletVal).toFixed(0)}`
+                      : `₹ ${walletVal.toFixed(0)}`}
+                  </span>
+                  <span className="ml-2 text-[10px] bg-white border px-2 py-0.5 rounded-full font-bold shadow-xs">
+                    + Add Money
                   </span>
                 </div>
               </div>
@@ -439,7 +560,9 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                       <Printer size={18} />
                     </div>
                     <div>
-                      <div className="text-xl font-extrabold text-gray-900 leading-none">0</div>
+                      <div className="text-xl font-extrabold text-gray-900 leading-none">
+                        {orders.filter((o) => o.status === 'completed').length}
+                      </div>
                       <div className="text-[11px] text-gray-400 font-medium mt-1">Prints</div>
                     </div>
                   </div>
@@ -463,7 +586,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
 
                 {/* Right Camera / Action Button */}
                 <button
-                  onClick={() => alert('Screenshot captured!')}
+                  onClick={() => alert('Portal view snapshot captured!')}
                   className="w-11 h-11 rounded-full bg-white border border-gray-200 shadow-sm text-gray-600 hover:text-gray-900 hover:shadow flex items-center justify-center transition-all shrink-0"
                   title="Capture Portal View"
                 >
@@ -618,6 +741,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                         <th className="p-3.5">Fee</th>
                         <th className="p-3.5">Status</th>
                         <th className="p-3.5">Date</th>
+                        <th className="p-3.5">Receipt</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -648,6 +772,15 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                             <td className="p-3.5 text-gray-400">
                               {new Date(ord.created_at).toLocaleDateString()}
                             </td>
+                            <td className="p-3.5">
+                              <button
+                                onClick={() => setViewReceiptOrder(ord)}
+                                className="flex items-center gap-1 text-[11px] font-bold text-[#E85D04] hover:underline"
+                              >
+                                <FileText size={13} />
+                                <span>Slip</span>
+                              </button>
+                            </td>
                           </tr>
                         )
                       })}
@@ -662,8 +795,30 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
               <Printer size={40} className="mx-auto text-gray-300 mb-3" />
               <h3 className="font-bold text-base text-gray-900">Print Management Desk</h3>
               <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
-                No pending certificates or slips in print queue. Slips appear here automatically when orders are approved by Admin.
+                All approved PAN slips, DL smart cards, and TEC certificates can be printed directly
+                with official QR stamp.
               </p>
+              {orders.length > 0 && (
+                <div className="mt-6">
+                  <span className="text-xs font-semibold text-gray-700 block mb-3">
+                    Recent Available Slips:
+                  </span>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {orders.slice(0, 3).map((o) => (
+                      <button
+                        key={o.id}
+                        onClick={() => setViewReceiptOrder(o)}
+                        className="px-3 py-1.5 bg-[#fff7ed] border border-[#fed7aa] text-[#E85D04] rounded-xl text-xs font-bold flex items-center gap-1.5"
+                      >
+                        <FileText size={14} />
+                        <span>
+                          {o.service_name} ({o.applicant_name})
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : activeMenu === 'complaints' ? (
             /* Complaints Desk */
@@ -736,11 +891,19 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100">
                   <span className="text-gray-500">Wallet Balance:</span>
-                  <span className="font-bold text-[#E85D04]">₹{Number(retailer.wallet).toFixed(2)}</span>
+                  <span
+                    className={`font-bold font-mono text-sm ${
+                      isNegative ? 'text-red-600' : 'text-[#E85D04]'
+                    }`}
+                  >
+                    {isNegative ? `-₹${Math.abs(walletVal).toFixed(2)} (Due Credit)` : `₹${walletVal.toFixed(2)}`}
+                  </span>
                 </div>
                 <div className="flex justify-between py-2">
                   <span className="text-gray-500">Portal Member Since:</span>
-                  <span className="text-gray-600">{new Date(retailer.created_at).toLocaleDateString()}</span>
+                  <span className="text-gray-600">
+                    {new Date(retailer.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -753,13 +916,13 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
         href="https://wa.me/917042702156"
         target="_blank"
         rel="noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-xl hover:shadow-2xl transition-all select-none"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-xl hover:shadow-2xl transition-all select-none"
       >
         <MessageCircle size={17} />
         <span>Help</span>
       </a>
 
-      {/* Application Form Modal */}
+      {/* Application Form Modal with UPI QR & Wallet Options */}
       {selectedService && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl text-gray-900">
@@ -800,7 +963,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
               </div>
             )}
 
-            <form onSubmit={handleSubmitOrder} className="space-y-3.5">
+            <form onSubmit={handleSubmitOrderWallet} className="space-y-3.5">
               <div>
                 <label className="text-xs font-semibold text-gray-700 block mb-1">
                   Applicant Full Name *
@@ -856,33 +1019,59 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                 />
               </div>
 
-              <div className="bg-[#fff7ed] p-3 rounded-xl border border-[#fed7aa] flex items-center justify-between text-xs">
-                <span className="text-gray-600 font-medium">Wallet Balance:</span>
-                <span className="font-bold text-[#E85D04]">
-                  ₹{Number(retailer.wallet).toFixed(2)}
+              {/* Wallet info (showing negative balance support) */}
+              <div
+                className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                  isNegative
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-[#fff7ed] border-[#fed7aa] text-gray-700'
+                }`}
+              >
+                <div>
+                  <span className="font-semibold block">Wallet Balance:</span>
+                  <span className="text-[10px] text-gray-500">
+                    {isNegative
+                      ? 'Credit limit active. You can still order!'
+                      : 'Orders will deduct from here.'}
+                  </span>
+                </div>
+                <span
+                  className={`font-mono font-bold text-sm ${
+                    isNegative ? 'text-red-600' : 'text-[#E85D04]'
+                  }`}
+                >
+                  {isNegative ? `-₹${Math.abs(walletVal).toFixed(2)}` : `₹${walletVal.toFixed(2)}`}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              {/* TWO PAYMENT OPTIONS */}
+              <div className="pt-2 space-y-2">
+                {/* 1. Pay via UPI QR Button */}
                 <button
                   type="button"
-                  onClick={() => setSelectedService(null)}
-                  className="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs rounded-xl"
+                  onClick={handleInitiateQRPayment}
+                  className="w-full py-3 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[#E85D04]/25 transition-all"
                 >
-                  Cancel
+                  <QrCode size={16} />
+                  <span>Pay Now via UPI QR Code (₹{selectedService.fee})</span>
                 </button>
+
+                {/* 2. Pay via Wallet (Can go negative) */}
                 <button
                   type="submit"
                   disabled={submittingOrder}
-                  className="w-2/3 py-2.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-[#E85D04]/20 disabled:opacity-50"
+                  className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
                   {submittingOrder ? (
                     <>
                       <Loader2 size={15} className="animate-spin" />
-                      <span>Submitting...</span>
+                      <span>Processing Order...</span>
                     </>
                   ) : (
-                    <span>Submit & Pay ₹{selectedService.fee}</span>
+                    <>
+                      <Coins size={14} className="text-[#E85D04]" />
+                      <span>Pay via Wallet Balance (Allow Negative)</span>
+                    </>
                   )}
                 </button>
               </div>
@@ -891,12 +1080,28 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
         </div>
       )}
 
-      {/* Add Money Modal */}
+      {/* Dynamic Payment QR Code Modal */}
+      {pendingOrderData && (
+        <PaymentQRModal
+          isOpen={showQRModal}
+          amount={pendingOrderData.service.fee}
+          serviceTitle={pendingOrderData.service.label}
+          orderId={pendingOrderData.orderId}
+          applicantName={pendingOrderData.name}
+          onClose={() => setShowQRModal(false)}
+          onSuccess={handleQRPaymentSuccess}
+        />
+      )}
+
+      {/* Add Money Modal (With UPI QR & Quick Buttons) */}
       {showWalletModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl text-gray-900">
+          <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl text-gray-900 border border-gray-100">
             <button
-              onClick={() => setShowWalletModal(false)}
+              onClick={() => {
+                setShowWalletModal(false)
+                setShowWalletQR(false)
+              }}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
             >
               <X size={18} />
@@ -904,45 +1109,171 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
 
             <h3 className="font-extrabold text-base text-gray-900 mb-1">Recharge Wallet</h3>
             <p className="text-xs text-gray-500 mb-4">
-              Add balance to your Treta Enterprises portal wallet.
+              Add balance to clear negative balance or add credit.
             </p>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                {['200', '500', '1000'].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setRechargeAmt(amt)}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
-                      rechargeAmt === amt
-                        ? 'bg-[#E85D04] text-white border-[#E85D04]'
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    + ₹{amt}
-                  </button>
-                ))}
+            {showWalletQR ? (
+              <div className="text-center py-2">
+                <div className="bg-white p-2 rounded-xl border border-gray-200 inline-block shadow-inner mb-3">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                      `upi://pay?pa=tretaenterprises@upi&pn=Treta%20Enterprises&am=${rechargeAmt}&cu=INR`
+                    )}`}
+                    alt="Recharge QR"
+                    className="w-40 h-40 mx-auto"
+                  />
+                </div>
+                <div className="text-xs text-gray-600 font-semibold mb-3">
+                  Scan to Pay ₹{rechargeAmt}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRechargeWallet}
+                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                >
+                  I Have Paid — Credit ₹{rechargeAmt} to Wallet
+                </button>
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {['200', '500', '1000'].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setRechargeAmt(amt)}
+                      className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
+                        rechargeAmt === amt
+                          ? 'bg-[#E85D04] text-white border-[#E85D04]'
+                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      + ₹{amt}
+                    </button>
+                  ))}
+                </div>
 
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">
-                  Custom Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={rechargeAmt}
-                  onChange={(e) => setRechargeAmt(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#E85D04]"
-                />
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 block mb-1">
+                    Custom Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={rechargeAmt}
+                    onChange={(e) => setRechargeAmt(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#E85D04]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowWalletQR(true)}
+                    className="w-full py-2.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl shadow-md shadow-[#E85D04]/20 flex items-center justify-center gap-1.5"
+                  >
+                    <QrCode size={15} />
+                    <span>Pay via UPI QR (₹{rechargeAmt})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRechargeWallet}
+                    className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl"
+                  >
+                    Instant Credit Balance
+                  </button>
+                </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Official Government / Treta Slip Receipt Modal */}
+      {viewReceiptOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl text-gray-900 border border-gray-200">
+            <button
+              onClick={() => setViewReceiptOrder(null)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Official Slip Header */}
+            <div className="border-b-2 border-dashed border-gray-200 pb-4 mb-4 text-center">
+              <img
+                src="./treta-hero-logo.png"
+                alt="Treta Enterprises"
+                className="h-10 mx-auto object-contain mb-1"
+              />
+              <h3 className="font-extrabold text-sm uppercase text-gray-900 tracking-wider">
+                TRETA ENTERPRISES
+              </h3>
+              <p className="text-[10px] text-gray-500 font-semibold uppercase">
+                Customer Application Acknowledgement Slip
+              </p>
+            </div>
+
+            {/* Slip Details Table */}
+            <div className="space-y-2 text-xs mb-5 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-sans">
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Order ID:</span>
+                <span className="font-mono font-bold text-gray-900">{viewReceiptOrder.id}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Service:</span>
+                <span className="font-bold text-gray-900">{viewReceiptOrder.service_name}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Applicant:</span>
+                <span className="font-semibold text-gray-900">{viewReceiptOrder.applicant_name}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Mobile:</span>
+                <span className="font-mono text-gray-900">{viewReceiptOrder.mobile}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Ref / Aadhar No:</span>
+                <span className="font-mono font-bold text-[#E85D04]">
+                  {viewReceiptOrder.reference_no}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Fee Amount:</span>
+                <span className="font-extrabold text-green-600">₹{viewReceiptOrder.fee}.00</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-200/60">
+                <span className="text-gray-500">Payment Status:</span>
+                <span className="font-extrabold uppercase text-green-600 flex items-center gap-1">
+                  <ShieldCheck size={14} /> Verified / Paid
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">Issued On:</span>
+                <span className="text-gray-700">
+                  {new Date(viewReceiptOrder.created_at).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Official Watermark & Print Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex-1 py-2.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Printer size={15} />
+                <span>Print Official Slip</span>
+              </button>
 
               <button
                 type="button"
-                onClick={handleRechargeWallet}
-                className="w-full py-3 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#E85D04]/20 transition-all"
+                onClick={() => setViewReceiptOrder(null)}
+                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl"
               >
-                Add ₹{rechargeAmt} to Wallet
+                Close
               </button>
             </div>
           </div>
