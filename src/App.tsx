@@ -84,6 +84,7 @@ export function App() {
           currentRetailer={currentRetailer}
           onNavigate={handleNavigate}
           onOpenLogin={() => handleOpenLogin('login')}
+          onOpenRegister={() => handleOpenLogin('register')}
         />
       )}
 

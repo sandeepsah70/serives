@@ -36,11 +36,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
   const [isVerifying, setIsVerifying] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const upiId = 'tretaenterprises@upi'
-  const upiUrl = `upi://pay?pa=${upiId}&pn=Treta%20Enterprises&am=${amount}&cu=INR&tn=Order%20${orderId}`
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-    upiUrl
-  )}&margin=6`
+  const upiId = '7042702156@upi'
 
   useEffect(() => {
     if (!isOpen) {
@@ -76,13 +72,13 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
       setIsVerifying(false)
       setIsSuccess(true)
       setTimeout(() => {
-        onSuccess(utr || `UTR${Date.now().toString().slice(-8)}`)
+        onSuccess(utr || `UPI${Date.now().toString().slice(-8)}`)
       }, 1200)
-    }, 1500)
+    }, 1200)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
       <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl text-gray-900 border border-gray-100">
         {/* Close Button */}
         <button
@@ -100,7 +96,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
             </div>
             <h3 className="text-xl font-extrabold text-gray-900">Payment Verified!</h3>
             <p className="text-xs text-gray-500 mt-1 mb-4">
-              ₹{amount} successfully paid for {serviceTitle}
+              ₹{amount} successfully received for {serviceTitle}
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-xs max-w-xs mx-auto space-y-1.5 text-left mb-4">
               <div className="flex justify-between">
@@ -113,10 +109,10 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
-                <span className="font-bold text-green-600 uppercase">Success</span>
+                <span className="font-bold text-green-600 uppercase">Paid & Confirmed</span>
               </div>
             </div>
-            <p className="text-[11px] text-gray-400">Updating your dashboard and orders...</p>
+            <p className="text-[11px] text-gray-400">Opening your application receipt...</p>
           </div>
         ) : (
           /* QR Code Payment View */
@@ -131,9 +127,9 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                 />
                 <div>
                   <h3 className="font-bold text-sm text-gray-900 leading-none">
-                    Treta Payment Gateway
+                    Treta UPI Payment Gateway
                   </h3>
-                  <span className="text-[10px] text-gray-400 font-medium">Instant UPI Settlement</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Instant QR Settlement</span>
                 </div>
               </div>
 
@@ -147,7 +143,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
             {/* Service & Amount Pill */}
             <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-2xl p-3.5 mb-4 flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-[#E85D04] font-semibold block uppercase tracking-wider">
+                <span className="text-[11px] text-[#F26700] font-semibold block uppercase tracking-wider">
                   {serviceTitle}
                 </span>
                 <span className="text-xs text-gray-700 font-medium">
@@ -156,34 +152,35 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-gray-400 block font-medium">Amount to Pay</span>
-                <span className="text-2xl font-extrabold text-[#E85D04]">₹{amount}</span>
+                <span className="text-2xl font-extrabold text-[#F26700]">₹{amount}</span>
               </div>
             </div>
 
-            {/* QR Code Container */}
+            {/* User Uploaded PhonePe QR Code Display */}
             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border border-gray-200/80 shadow-inner mb-4">
-              <div className="relative p-2 bg-white rounded-xl shadow-sm">
+              <div className="relative p-2 bg-white rounded-xl shadow-md border border-gray-100">
                 <img
-                  src={qrCodeUrl}
-                  alt="UPI Payment QR Code"
+                  src="./payment-qr.jpg"
+                  alt="Official PhonePe UPI QR Code"
                   className="w-48 h-48 object-contain rounded-lg"
                   onError={(e) => {
-                    // Fallback visual if offline
-                    (e.target as HTMLElement).style.display = 'none'
+                    // Fallback to dynamic QR if needed
+                    const target = e.target as HTMLImageElement
+                    target.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi://pay?pa=7042702156@upi&pn=Treta%20Enterprises&am=${amount}&cu=INR`
                   }}
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-2 font-medium">
-                <Smartphone size={14} className="text-[#E85D04]" />
-                <span>Scan with Google Pay, PhonePe, Paytm or BHIM</span>
+              <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-2 font-medium">
+                <Smartphone size={14} className="text-[#F26700]" />
+                <span>Scan with PhonePe, Google Pay, Paytm or BHIM</span>
               </div>
             </div>
 
             {/* UPI ID with Copy Button */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-4 flex items-center justify-between text-xs">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 flex items-center justify-between text-xs">
               <div>
-                <span className="text-[10px] text-gray-400 block">Official UPI ID:</span>
+                <span className="text-[10px] text-gray-400 block">UPI ID:</span>
                 <span className="font-mono font-bold text-gray-800">{upiId}</span>
               </div>
               <button
@@ -200,10 +197,10 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
             <div className="space-y-2 mb-4">
               <input
                 type="text"
-                placeholder="Optional: Enter 12-digit UTR / Ref Number"
+                placeholder="Enter 12-digit UPI Ref / UTR Number"
                 value={utr}
                 onChange={(e) => setUtr(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:border-[#E85D04] font-mono"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:border-[#F26700] font-mono"
               />
             </div>
 
@@ -212,7 +209,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
               type="button"
               onClick={handleConfirmPayment}
               disabled={isVerifying}
-              className="w-full py-3 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#E85D04]/30 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60"
+              className="w-full py-3 bg-[#F26700] hover:bg-[#d95c00] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#F26700]/30 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60"
             >
               {isVerifying ? (
                 <>
