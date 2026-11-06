@@ -29,7 +29,8 @@ import {
   CheckCircle2,
   AlertCircle,
   QrCode,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from 'lucide-react'
 
 interface RetailerDashboardProps {
@@ -46,6 +47,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
   const [activeMenu, setActiveMenu] = useState<
     'dashboard' | 'services' | 'orders' | 'prints' | 'wallet' | 'account' | 'complaints'
   >('dashboard')
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   const [orders, setOrders] = useState<Order[]>([])
   const [complaintsCount, setComplaintsCount] = useState(0)
@@ -298,8 +300,20 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-gray-900 flex font-sans antialiased">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* A. LEFT SIDEBAR (Width: ~228px, Background: #101010, Text: #FFFFFF, Accent: #FF6500) */}
-      <aside className="w-[228px] bg-[#101010] text-[#FFFFFF] flex flex-col justify-between shrink-0 border-r border-[#222222] select-none min-h-screen">
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-[240px] sm:w-[228px] bg-[#101010] text-[#FFFFFF] flex flex-col justify-between shrink-0 border-r border-[#222222] select-none min-h-screen transition-transform duration-200 ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         <div>
           {/* Treta Logo Top Center */}
           <div className="py-6 px-4 flex flex-col items-center justify-center border-b border-[#222222]">
@@ -494,9 +508,19 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
       {/* 2. RIGHT CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* B. Top Header: Height ~52px, Background: White, Title: Orange #F05B00, Right wallet & profile */}
-        <header className="h-[52px] bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-40 select-none">
-          <div className="font-extrabold text-[#F05B00] text-base sm:text-lg tracking-tight">
-            Treta Enterprises
+        <header className="h-[52px] bg-white border-b border-gray-200 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 select-none">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              className="p-1.5 -ml-1 text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg md:hidden"
+              aria-label="Toggle Navigation Menu"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="font-extrabold text-[#F05B00] text-base sm:text-lg tracking-tight">
+              Treta Enterprises
+            </div>
           </div>
 
           <div className="flex items-center gap-3">

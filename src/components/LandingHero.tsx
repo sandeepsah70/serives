@@ -44,9 +44,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#E85D04]/8 blur-3xl" />
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center relative z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-center relative z-10">
           {/* Badge: India's Trusted Retailer Portal */}
-          <div className="inline-flex items-center gap-2 bg-[#E85D04]/10 border border-[#E85D04]/30 rounded-full px-4 py-1.5 text-xs text-[#E85D04] font-semibold mb-8 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 bg-[#E85D04]/10 border border-[#E85D04]/30 rounded-full px-3.5 sm:px-4 py-1.5 text-xs text-[#E85D04] font-semibold mb-6 sm:mb-8 uppercase tracking-wider">
             <Sparkles className="h-3 w-3" />
             <span>India's Trusted Retailer Portal</span>
           </div>
@@ -55,25 +55,25 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           <img
             src="./treta-hero-logo.png"
             alt="Treta Enterprises"
-            className="h-32 mx-auto mb-6 rounded-2xl shadow-2xl shadow-[#E85D04]/20"
+            className="h-24 sm:h-32 mx-auto mb-5 sm:mb-6 rounded-2xl shadow-2xl shadow-[#E85D04]/20 object-contain"
           />
 
           {/* Heading: Treta Enterprises */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 leading-tight tracking-tight">
             Treta <span className="text-[#E85D04]">Enterprises</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto">
+          <p className="text-white/60 text-sm sm:text-lg mb-8 sm:mb-10 max-w-xl mx-auto px-2">
             Government services, utility payments and identity verification — all in one place
           </p>
 
           {/* Main Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16 w-full max-w-md mx-auto sm:max-w-none">
             <button
               type="button"
               onClick={onLoginClick}
-              className="w-full sm:w-auto px-8 py-3.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#E85D04]/30 active:scale-95"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold text-sm sm:text-base rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#E85D04]/30 active:scale-95"
             >
               <span>Login to Portal</span>
               <ArrowRight className="h-4 w-4" />
@@ -81,7 +81,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <button
               type="button"
               onClick={onRegisterClick}
-              className="w-full sm:w-auto px-8 py-3.5 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 border border-white/20 text-white font-semibold text-sm sm:text-base rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
             >
               <UserPlus className="h-4 w-4" />
               <span>New Retailer? Register</span>
@@ -89,7 +89,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           {/* 7 Services Grid */}
-          <div className="grid grid-cols-4 md:grid-cols-7 gap-3 max-w-3xl mx-auto mb-16">
+          <div className="grid grid-cols-2 min-[440px]:grid-cols-4 md:grid-cols-7 gap-2.5 sm:gap-3 max-w-3xl mx-auto mb-12 sm:mb-16">
             {LANDING_SERVICES.map((s) => {
               const Icon = s.icon
               return (

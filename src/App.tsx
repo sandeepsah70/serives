@@ -99,7 +99,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans overflow-x-hidden">
       {/* Navbar only shown on public landing pages when not in admin and not logged in */}
       {currentView !== 'admin' && !currentRetailer && (
         <Navbar
