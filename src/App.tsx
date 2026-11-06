@@ -32,6 +32,28 @@ export function App() {
         return
       }
 
+      // Check for login / register / createaccount direct links
+      if (
+        hash.includes('login') ||
+        search.includes('login') ||
+        path.endsWith('/login') ||
+        path.includes('members/login')
+      ) {
+        setAuthInitialMode('login')
+        setAuthModalOpen(true)
+      } else if (
+        hash.includes('register') ||
+        hash.includes('createaccount') ||
+        search.includes('register') ||
+        search.includes('createaccount') ||
+        path.endsWith('/register') ||
+        path.endsWith('/createaccount') ||
+        path.includes('members/createaccount')
+      ) {
+        setAuthInitialMode('register')
+        setAuthModalOpen(true)
+      }
+
       // Check saved retailer session
       const saved = localStorage.getItem('treta_retailer_session')
       if (saved) {

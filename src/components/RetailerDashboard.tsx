@@ -522,7 +522,7 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
                   {retailer.name}
                 </span>
                 <span className="text-[10px] text-gray-400 capitalize block leading-tight">
-                  retailer
+                  {retailer.user_type || 'retailer'}
                 </span>
               </div>
               <div className="w-8 h-8 rounded-full bg-[#F05B00] text-white font-bold text-xs flex items-center justify-center shadow-sm">

@@ -5,6 +5,9 @@ export interface Retailer {
   email: string
   wallet: number
   created_at: string
+  shop_name?: string
+  user_type?: 'Retailer' | 'Distributor' | 'Master Distributor'
+  password?: string
 }
 
 export interface Order {
