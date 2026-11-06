@@ -11,7 +11,8 @@ import {
   UserPlus,
   ShieldCheck,
   Zap,
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react'
 
 interface LandingHeroProps {
@@ -36,135 +37,121 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   onServiceClick
 }) => {
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-[#F26700]/30 selection:text-white font-sans">
-      {/* 1. Hero Section with subtle dark brown radial gradient */}
-      <section className="relative pt-12 pb-14 px-4 sm:px-6 text-center max-w-5xl mx-auto overflow-hidden">
-        {/* Subtle dark brown radial gradient in center */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#3a1a05]/25 blur-[120px] rounded-full pointer-events-none -z-10" />
-
-        {/* Trusted Retailer Portal Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1c140e] border border-[#F26700]/30 text-xs font-semibold text-[#F26700] mb-6 uppercase tracking-wider shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-[#F26700] animate-pulse" />
-          <span>Trusted Retailer Portal</span>
+    <div className="min-h-screen bg-black text-white relative select-none">
+      {/* 1. Hero Section with radial background glow */}
+      <div className="relative">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#E85D04]/8 blur-3xl" />
         </div>
 
-        {/* Logo Card with subtle orange shadow */}
-        <div className="relative mb-5 flex justify-center">
-          <div className="p-3 bg-[#12100e] border border-white/10 rounded-2xl shadow-2xl shadow-[#F26700]/20 inline-block">
-            <img
-              src="./treta-hero-logo.png"
-              alt="Treta Enterprises"
-              className="h-28 sm:h-32 object-contain"
-            />
+        <div className="max-w-4xl mx-auto px-6 py-16 text-center relative z-10">
+          {/* Badge: India's Trusted Retailer Portal */}
+          <div className="inline-flex items-center gap-2 bg-[#E85D04]/10 border border-[#E85D04]/30 rounded-full px-4 py-1.5 text-xs text-[#E85D04] font-semibold mb-8 uppercase tracking-wider">
+            <Sparkles className="h-3 w-3" />
+            <span>India's Trusted Retailer Portal</span>
           </div>
-        </div>
 
-        {/* Main Heading: Treta (White) Enterprises (Orange #F26700) */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-3 leading-tight tracking-tight">
-          Treta <span className="text-[#F26700]">Enterprises</span>
-        </h1>
+          {/* Treta Logo Card */}
+          <img
+            src="./treta-hero-logo.png"
+            alt="Treta Enterprises"
+            className="h-32 mx-auto mb-6 rounded-2xl shadow-2xl shadow-[#E85D04]/20"
+          />
 
-        {/* Description */}
-        <p className="text-[#a1a1aa] text-base sm:text-lg mb-9 max-w-xl mx-auto leading-relaxed">
-          Government services, utility payments and identity verification — all in one place
-        </p>
+          {/* Heading: Treta Enterprises */}
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight tracking-tight">
+            Treta <span className="text-[#E85D04]">Enterprises</span>
+          </h1>
 
-        {/* Main Call To Action Buttons (Exact specs: Login 201x53, Register 264x53, row on desktop, stack on mobile) */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          {/* Login to Portal Button: 201 × 53 px, Orange Filled #F26700, White Text, Arrow */}
-          <button
-            type="button"
-            onClick={onLoginClick}
-            className="w-full sm:w-[201px] h-[53px] bg-[#F26700] hover:bg-[#d95c00] text-white font-bold text-sm sm:text-base rounded-[12px] flex items-center justify-center gap-2.5 transition-all duration-200 shadow-lg shadow-[#F26700]/30 hover:brightness-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#F26700]"
-          >
-            <span>Login to Portal</span>
-            <ArrowRight size={18} />
-          </button>
+          {/* Subtitle */}
+          <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto">
+            Government services, utility payments and identity verification — all in one place
+          </p>
 
-          {/* New Retailer? Register Button: 264 × 53 px, Transparent Black, Grey/White Border */}
-          <button
-            type="button"
-            onClick={onRegisterClick}
-            className="w-full sm:w-[264px] h-[53px] bg-[#000000]/80 border border-[#404040] hover:border-white/50 text-white font-semibold text-sm sm:text-base rounded-[12px] flex items-center justify-center gap-2.5 transition-all duration-200 hover:bg-white/5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/40"
-          >
-            <UserPlus size={18} className="text-[#a1a1aa]" />
-            <span>New Retailer? Register</span>
-          </button>
-        </div>
+          {/* Main Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <button
+              type="button"
+              onClick={onLoginClick}
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#E85D04] hover:bg-[#cc4f03] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#E85D04]/30 active:scale-95"
+            >
+              <span>Login to Portal</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onRegisterClick}
+              className="w-full sm:w-auto px-8 py-3.5 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>New Retailer? Register</span>
+            </button>
+          </div>
 
-        {/* Section 01 — 7 Services Cards (Horizontal row, total width ~768px, 12px gap, 99x99 px, Dark Charcoal #151312, border 1px #302B28, radius 13px) */}
-        <div className="max-w-[768px] mx-auto mb-14">
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 justify-center items-center">
+          {/* 7 Services Grid */}
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-3 max-w-3xl mx-auto mb-16">
             {LANDING_SERVICES.map((s) => {
               const Icon = s.icon
               return (
                 <div
-                  key={s.id}
+                  key={s.label}
                   onClick={() => onServiceClick(s.id)}
-                  className="w-full sm:w-[99px] h-[99px] bg-[#151312] border border-[#302B28] hover:border-[#F26700] hover:bg-[#1a1715] rounded-[13px] flex flex-col items-center justify-center p-2 text-center cursor-pointer transition-all duration-200 group active:scale-95"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group"
                 >
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: `${s.color}20` }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: `${s.color}33` }}
                   >
-                    <Icon size={17} style={{ color: s.color }} />
+                    <Icon className="h-5 w-5" style={{ color: s.color }} />
                   </div>
-                  <span className="text-[10px] text-white/90 font-medium text-center leading-tight line-clamp-2">
+                  <span className="text-[10px] text-white/70 font-medium text-center leading-tight">
                     {s.label}
                   </span>
                 </div>
               )
             })}
           </div>
-        </div>
 
-        {/* Section 02 — Statistics Cards (3 Cards in one line, 117x70 px each, Background #151312, Radius 12px, Orange #FF6500) */}
-        <div className="flex items-center justify-center gap-4 max-w-sm mx-auto mb-16 flex-wrap">
-          {[
-            { value: '11+', label: 'Services' },
-            { value: 'Fast', label: 'Processing' },
-            { value: '24/7', label: 'Support' }
-          ].map((st) => (
-            <div
-              key={st.label}
-              className="w-[117px] h-[70px] bg-[#151312] border border-[#302B28] rounded-[12px] flex flex-col items-center justify-center text-center p-2"
-            >
-              <div className="text-xl font-extrabold text-[#FF6500] leading-none mb-1">
-                {st.value}
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto">
+            {[
+              { value: '11+', label: 'Services' },
+              { value: 'Fast', label: 'Processing' },
+              { value: '24/7', label: 'Support' }
+            ].map((e) => (
+              <div key={e.label} className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
+                <div className="text-xl font-bold text-[#E85D04]">{e.value}</div>
+                <div className="text-xs text-white/50">{e.label}</div>
               </div>
-              <div className="text-xs text-[#a1a1aa] font-medium leading-none">{st.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 03 — Features (3 Cards in one line, approx 240x106 px each, 24px gap, orange icons, white titles, grey desc, dark bg, thin border) */}
-      <section className="border-t border-[#222222] py-14 px-4 sm:px-6 bg-[#000000]">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6">
-          <div className="w-full md:w-[240px] min-h-[106px] bg-[#151312] border border-[#302B28] rounded-2xl p-4 text-center flex flex-col items-center justify-center">
-            <Zap className="h-6 w-6 text-[#F26700] mb-2" />
-            <h3 className="font-bold text-sm text-white mb-0.5">Instant Results</h3>
-            <p className="text-xs text-[#777777] leading-tight">Real-time data processing</p>
-          </div>
-
-          <div className="w-full md:w-[240px] min-h-[106px] bg-[#151312] border border-[#302B28] rounded-2xl p-4 text-center flex flex-col items-center justify-center">
-            <ShieldCheck className="h-6 w-6 text-[#F26700] mb-2" />
-            <h3 className="font-bold text-sm text-white mb-0.5">100% Secure</h3>
-            <p className="text-xs text-[#777777] leading-tight">Encrypted & safe platform</p>
-          </div>
-
-          <div className="w-full md:w-[240px] min-h-[106px] bg-[#151312] border border-[#302B28] rounded-2xl p-4 text-center flex flex-col items-center justify-center">
-            <Users className="h-6 w-6 text-[#F26700] mb-2" />
-            <h3 className="font-bold text-sm text-white mb-0.5">Retailer Friendly</h3>
-            <p className="text-xs text-[#777777] leading-tight">Easy to use for all retailers</p>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Section 04 — Footer (1px divider, Copyright 2026 Treta Enterprises. All Rights Reserved., 12px, #777777, Black) */}
-      <footer className="border-t border-[#222222] py-6 text-center text-xs text-[#777777] bg-[#000000]">
-        <p>Copyright 2026 Treta Enterprises. All Rights Reserved.</p>
-      </footer>
+      {/* 2. Feature Cards */}
+      <div className="border-t border-white/10 py-10 px-6">
+        <div className="max-w-3xl mx-auto grid md:grid-cols-3 gap-6 text-center">
+          {[
+            { icon: Zap, title: 'Instant Results', desc: 'Real-time data processing' },
+            { icon: ShieldCheck, title: '100% Secure', desc: 'Encrypted & safe platform' },
+            { icon: Users, title: 'Retailer Friendly', desc: 'Easy to use for all retailers' }
+          ].map((e) => {
+            const Icon = e.icon
+            return (
+              <div key={e.title} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <Icon className="h-6 w-6 text-[#E85D04] mx-auto mb-2" />
+                <div className="font-semibold text-sm mb-1">{e.title}</div>
+                <div className="text-xs text-white/50">{e.desc}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 3. Footer */}
+      <div className="text-center py-6 border-t border-white/10 text-xs text-white/30">
+        Copyright 2026 Treta Enterprises. All Rights Reserved.
+      </div>
     </div>
   )
 }
