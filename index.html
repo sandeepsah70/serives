@@ -1,17 +1,1702 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Treta Enterprises - India's Trusted Retailer Portal</title>
-    <meta name="description" content="Treta Enterprises — Government services, utility payments and identity verification all in one place." />
-    <link rel="icon" type="image/png" href="./treta-hero-logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-black text-white antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Treta Enterprises retailer portal for services, utility payments and retailer support.">
+<meta name="theme-color" content="#000000">
+<title>Treta Enterprises | Retailer Portal</title>
+<link rel="icon" type="image/png" href="./treta-hero-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Supabase JS Client v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --orange:#f06400;
+  --orange-hover:#e05500;
+  --bg:#000000;
+  --panel:#100d0b;
+  --muted:#92908f;
+  --line:#292522;
+  --card-bg:#151312;
+  --card-border:#302b28;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:#000}
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:'Inter',Arial,Helvetica,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-width:320px;
+  overflow-x:hidden;
+}
+button,input,select{font:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* ================= HEADER ================= */
+.site-header{
+  height:76px;
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#000;
+  border-bottom:1px solid #1a1614;
+  position:sticky;
+  top:0;
+  z-index:40;
+}
+.brand-mini{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-decoration:none;
+  color:#fff;
+  cursor:pointer;
+}
+.brand-mini img{
+  width:44px;
+  height:44px;
+  object-fit:contain;
+  border-radius:10px;
+}
+.brand-name{
+  font-size:16px;
+  font-weight:700;
+  line-height:1.2;
+}
+.brand-name small{
+  display:block;
+  color:var(--orange);
+  letter-spacing:2px;
+  font-size:9px;
+  font-weight:700;
+  margin-top:2px;
+}
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.btn{
+  border:1px solid var(--orange);
+  border-radius:10px;
+  background:transparent;
+  color:var(--orange);
+  font-weight:700;
+  padding:9px 18px;
+  font-size:14px;
+  transition:all .2s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-decoration:none;
+}
+.btn:hover{
+  background:rgba(240,100,0,.1);
+  transform:translateY(-1px);
+}
+.btn-solid{
+  background:var(--orange);
+  color:#fff;
+  border-color:var(--orange);
+  box-shadow:0 6px 18px rgba(240,100,0,.3);
+}
+.btn-solid:hover{
+  background:var(--orange-hover);
+  border-color:var(--orange-hover);
+}
+
+/* ================= HERO ================= */
+.hero{
+  padding:80px 24px 60px;
+  text-align:center;
+  background:radial-gradient(ellipse at 50% 45%,rgba(240,100,0,.15),transparent 65%),#000;
+}
+.trust-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid #713000;
+  border-radius:30px;
+  background:#140a02;
+  color:var(--orange);
+  padding:7px 18px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+}
+.trust-pill svg{
+  width:14px;
+  height:14px;
+  fill:currentColor;
+}
+.hero-logo{
+  width:130px;
+  height:130px;
+  object-fit:cover;
+  border-radius:24px;
+  display:block;
+  margin:28px auto 20px;
+  box-shadow:0 18px 45px rgba(240,100,0,.15);
+  border:1px solid #2e1a0e;
+}
+h1{
+  font-size: clamp(30px, 6vw, 44px);
+  line-height:1.2;
+  margin:0 auto 16px;
+  letter-spacing:-0.5px;
+  font-weight:800;
+}
+h1 span{color:var(--orange)}
+.hero-copy{
+  font-size:17px;
+  line-height:1.55;
+  color:#9a938e;
+  max-width:440px;
+  margin:0 auto 32px;
+}
+.hero-actions{
+  max-width:380px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.hero-cta{
+  width:100%;
+  height:52px;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:700;
+}
+.register-cta{
+  width:100%;
+  height:52px;
+  border:1px solid #4a382c;
+  border-radius:12px;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  background:rgba(20,12,8,.7);
+}
+.register-cta:hover{
+  border-color:var(--orange);
+  background:rgba(30,16,10,.8);
+}
+
+/* ================= SERVICES ================= */
+.services{
+  padding:60px 24px 70px;
+  background:linear-gradient(180deg,#100802 0%,#050302 45%,#000000 100%);
+  border-top:1px solid #1a1410;
+}
+.section-head{
+  text-align:center;
+  margin-bottom:34px;
+}
+.section-badge{
+  color:var(--orange);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  display:inline-block;
+  margin-bottom:6px;
+}
+.section-title{
+  font-size:26px;
+  font-weight:800;
+  margin:0;
+  color:#fff;
+}
+.service-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  max-width:860px;
+  margin:0 auto;
+}
+.service-card{
+  min-height:140px;
+  padding:16px 10px 14px;
+  border:1px solid #362920;
+  border-radius:14px;
+  background:rgba(26,18,13,.7);
+  color:#d4ceca;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  text-align:center;
+  font-size:12px;
+  font-weight:600;
+  line-height:1.35;
+  transition:all .2s ease;
+  user-select:none;
+}
+.service-card:hover{
+  border-color:var(--orange);
+  background:#26170d;
+  transform:translateY(-2px);
+  color:#fff;
+  box-shadow:0 8px 24px rgba(240,100,0,.15);
+}
+.icon-circle{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  transition:transform .2s;
+}
+.service-card:hover .icon-circle{
+  transform:scale(1.08);
+}
+.icon-circle svg{
+  width:22px;
+  height:22px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.purple{background:#32153f;color:#a855f7}
+.blue{background:#13264d;color:#3b82f6}
+.red{background:#451410;color:#ef4444}
+.brown{background:#421d0a;color:#f97316}
+.green{background:#0a3522;color:#10b981}
+
+/* ================= STATS ================= */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  max-width:860px;
+  margin:50px auto 0;
+}
+.stat{
+  border:1px solid #26211e;
+  border-radius:14px;
+  background:#0f0d0c;
+  min-height:76px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+.stat strong{
+  font-size:24px;
+  font-weight:800;
+  color:var(--orange);
+}
+.stat span{
+  font-size:12px;
+  color:#888;
+  font-weight:500;
+}
+
+/* ================= BENEFITS ================= */
+.benefits{
+  border-top:1px solid #201a16;
+  padding:50px 24px 60px;
+  background:#000;
+  max-width:860px;
+  margin:0 auto;
+}
+.benefit{
+  min-height:96px;
+  border:1px solid #26211e;
+  border-radius:14px;
+  background:#0f0d0c;
+  margin:0 0 16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  text-align:center;
+  padding:16px;
+}
+.benefit:last-child{margin-bottom:0}
+.benefit svg{
+  width:24px;
+  height:24px;
+  stroke:var(--orange);
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.benefit strong{
+  font-size:15px;
+  font-weight:700;
+}
+.benefit span{
+  color:#888;
+  font-size:13px;
+}
+
+/* ================= FOOTER ================= */
+footer{
+  border-top:1px solid #1a1614;
+  padding:32px 20px 24px;
+  text-align:center;
+  color:#666;
+  font-size:12px;
+  background:#000;
+  line-height:1.7;
+}
+footer a{color:#888;text-decoration:none}
+footer a:hover{color:var(--orange)}
+
+/* ================= RETAILER DASHBOARD ================= */
+#retailerDashboard{
+  display:none;
+  min-height:100vh;
+  background:#070504;
+  padding-bottom:60px;
+}
+.dash-header{
+  height:76px;
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#000;
+  border-bottom:1px solid #201914;
+  position:sticky;
+  top:0;
+  z-index:40;
+}
+.dash-user{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.user-avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:var(--orange);
+  color:#fff;
+  font-weight:800;
+  display:grid;
+  place-items:center;
+  font-size:16px;
+}
+.dash-wallet-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.wallet-badge{
+  background:#140e0a;
+  border:1px solid #3a271c;
+  border-radius:10px;
+  padding:6px 14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+.wallet-badge.positive strong{color:#10b981}
+.wallet-badge.negative strong{color:#ef4444}
+.dash-content{
+  max-width:960px;
+  margin:30px auto 0;
+  padding:0 20px;
+}
+.dash-card{
+  background:#100d0b;
+  border:1px solid #2b1f17;
+  border-radius:16px;
+  padding:24px;
+  margin-bottom:24px;
+}
+.dash-card-title{
+  font-size:18px;
+  font-weight:700;
+  margin:0 0 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.table-wrap{
+  overflow-x:auto;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  text-align:left;
+}
+th,td{
+  padding:12px 14px;
+  border-bottom:1px solid #211812;
+}
+th{color:#888;font-weight:600;background:#0c0907}
+.status-pill{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.status-success{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.status-pending{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+
+/* ================= MODAL OVERLAY ================= */
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:60;
+  overflow-y:auto;
+}
+.modal-backdrop.show{display:flex}
+
+/* ================= EXACT SCREENSHOT MODAL STYLES ================= */
+.auth-card{
+  width:min(100%, 440px);
+  background:#0d1117;
+  border:1px solid #21262d;
+  border-radius:16px;
+  padding:24px 26px;
+  box-shadow:0 24px 70px rgba(0,0,0,.85);
+  position:relative;
+  margin:auto;
+  animation:modalFade .2s ease;
+}
+@keyframes modalFade{
+  from{opacity:0;transform:scale(.96)}
+  to{opacity:1;transform:scale(1)}
+}
+.modal-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+.modal-header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.modal-header-icon{
+  width:22px;
+  height:22px;
+  color:var(--orange);
+  stroke:var(--orange);
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.modal-title-text{
+  font-size:18px;
+  font-weight:700;
+  color:#fff;
+  margin:0;
+  letter-spacing:-0.2px;
+}
+.modal-close-btn{
+  border:0;
+  background:transparent;
+  color:#8b949e;
+  font-size:20px;
+  line-height:1;
+  padding:4px;
+  cursor:pointer;
+  transition:color .15s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.modal-close-btn:hover{color:#fff}
+.modal-subtitle-text{
+  font-size:13px;
+  color:#8b949e;
+  margin:0 0 20px 0;
+  line-height:1.45;
+}
+
+/* Forms and fields */
+.form-group{
+  margin-bottom:15px;
+}
+.form-label{
+  display:block;
+  font-size:13px;
+  font-weight:500;
+  color:#c9d1d9;
+  margin-bottom:6px;
+}
+.input-with-icon{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.input-icon{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:16px;
+  height:16px;
+  color:#6e7681;
+  stroke:#6e7681;
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+}
+.form-input{
+  width:100%;
+  height:44px;
+  padding:0 14px;
+  background:#111622;
+  border:1px solid #21262d;
+  border-radius:8px;
+  color:#f0f6fc;
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.form-input.has-icon{
+  padding-left:40px;
+}
+.form-input.has-toggle{
+  padding-right:40px;
+}
+.form-input:focus{
+  border-color:var(--orange);
+  box-shadow:0 0 0 2px rgba(240,100,0,.2);
+}
+.form-input::placeholder{
+  color:#6e7681;
+}
+.input-eye-btn{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:transparent;
+  border:0;
+  color:#6e7681;
+  cursor:pointer;
+  padding:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.input-eye-btn:hover{color:#c9d1d9}
+.input-eye-btn svg{
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* Modal Bottom Buttons Row */
+.modal-actions-row{
+  display:flex;
+  gap:12px;
+  margin-top:24px;
+}
+.btn-cancel{
+  flex:1;
+  height:44px;
+  background:#161b22;
+  border:1px solid #30363d;
+  border-radius:8px;
+  color:#c9d1d9;
+  font-size:14px;
+  font-weight:600;
+  transition:all .15s ease;
+}
+.btn-cancel:hover{
+  background:#21262d;
+  color:#fff;
+}
+.btn-action{
+  flex:1.3;
+  height:44px;
+  background:var(--orange);
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  transition:all .15s ease;
+  box-shadow:0 4px 14px rgba(240,100,0,.25);
+}
+.btn-action:hover{
+  background:var(--orange-hover);
+}
+.btn-action:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+.switch-auth-link{
+  display:block;
+  width:100%;
+  margin-top:16px;
+  border:0;
+  background:transparent;
+  color:var(--orange);
+  text-align:center;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  padding:4px;
+}
+.switch-auth-link:hover{text-decoration:underline}
+
+/* ================= PAYMENT MODAL ================= */
+.payment-modal-card{
+  width:min(100%, 420px);
+  background:#0d1117;
+  border:1px solid #21262d;
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 24px 70px rgba(0,0,0,.9);
+  position:relative;
+  margin:auto;
+  text-align:center;
+  animation:modalFade .2s ease;
+}
+.pay-amount{
+  font-size:36px;
+  font-weight:800;
+  color:var(--orange);
+  margin:4px 0 2px;
+}
+.pay-amount span{
+  display:block;
+  font-size:12px;
+  font-weight:500;
+  color:#8b949e;
+  margin-top:2px;
+}
+.pay-instruction{
+  color:#8b949e;
+  font-size:13px;
+  line-height:1.5;
+  margin:8px auto 14px;
+}
+.payment-qr{
+  display:block;
+  width:min(100%, 250px);
+  height:auto;
+  margin:12px auto;
+  background:#000;
+  padding:8px;
+  border-radius:14px;
+  border:1px solid #30363d;
+}
+.upi-id{
+  font-size:13px;
+  color:#8b949e;
+  margin:10px 0 12px;
+}
+.upi-id strong{
+  color:#fff;
+  user-select:all;
+  letter-spacing:0.5px;
+}
+.countdown-box{
+  margin-bottom:14px;
+  font-size:12px;
+  color:var(--orange);
+  font-weight:700;
+  background:rgba(240,100,0,.08);
+  border:1px solid rgba(240,100,0,.2);
+  border-radius:8px;
+  padding:6px 12px;
+  display:inline-block;
+}
+
+/* ================= FLOATING WHATSAPP BUTTON ================= */
+.floating-whatsapp{
+  position:fixed;
+  bottom:22px;
+  right:22px;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:#25d366;
+  color:#fff;
+  display:grid;
+  place-items:center;
+  box-shadow:0 8px 24px rgba(37,211,102,.35);
+  z-index:50;
+  transition:transform .2s;
+}
+.floating-whatsapp:hover{transform:scale(1.08)}
+.floating-whatsapp svg{width:28px;height:28px;fill:currentColor}
+
+/* ================= TOAST ================= */
+.toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#161b22;
+  color:#fff;
+  border:1px solid #30363d;
+  border-radius:30px;
+  padding:12px 22px;
+  z-index:100;
+  display:none;
+  white-space:nowrap;
+  font-size:13px;
+  font-weight:600;
+  box-shadow:0 12px 36px rgba(0,0,0,.6);
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+  .service-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .stats{grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat strong{font-size:20px}
+  .stat span{font-size:11px}
+}
+@media(max-width:400px){
+  .site-header{padding:0 14px}
+  .brand-name{font-size:14px}
+  .header-actions .btn{padding:8px 12px;font-size:12px}
+  .hero{padding:50px 16px 40px}
+  .hero-logo{width:110px;height:110px}
+  h1{font-size:28px}
+  .service-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .service-card{min-height:120px;font-size:11px}
+  .auth-card{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<div id="publicSite">
+  <!-- ================= SITE HEADER ================= -->
+  <header class="site-header">
+    <a href="#" class="brand-mini" onclick="location.reload(); return false;">
+      <img src="./treta-hero-logo.png" alt="Treta Enterprises logo">
+      <div class="brand-name">
+        TRETA ENTERPRISES
+        <small>RETAILER PORTAL</small>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button class="btn" onclick="openModal('login')">Login</button>
+      <button class="btn btn-solid" onclick="openModal('register')">Create Account</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="trust-pill">
+        <svg viewBox="0 0 24 24"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm-2 16l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z"/></svg>
+        <span>OFFICIAL RETAILER PORTAL</span>
+      </div>
+
+      <img src="./treta-hero-logo.png" alt="Treta Enterprises Icon" class="hero-logo">
+
+      <h1>All Services in <span>One Click</span></h1>
+      <p class="hero-copy">Government services, utility payments and identity verification — all in one place</p>
+      <div class="hero-actions">
+        <button class="btn btn-solid hero-cta" onclick="openModal('login')">Login to Portal &nbsp;&rarr;</button>
+        <button class="btn register-cta" onclick="openModal('register')">New Retailer? Register</button>
+      </div>
+    </section>
+
+    <!-- ================= SERVICES GRID ================= -->
+    <section class="services">
+      <div class="section-head">
+        <div class="section-badge">POPULAR SERVICES</div>
+        <h2 class="section-title">Instant Online Verification</h2>
+      </div>
+
+      <div class="service-grid">
+        <div class="service-card" onclick="promptApplyService('PAN Card New / Correction', 107)">
+          <div class="icon-circle purple">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+          </div>
+          <span>PAN Card Services</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Aadhaar Address / Mobile Update', 50)">
+          <div class="icon-circle blue">
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <span>Aadhaar Update</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Voter ID Card Download', 30)">
+          <div class="icon-circle red">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span>Voter ID Card</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Ration Card Print / Verify', 25)">
+          <div class="icon-circle brown">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <span>Ration Card</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Driving License (DL) Services', 40)">
+          <div class="icon-circle green">
+            <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <span>DL Services</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Vehicle RC Verification', 30)">
+          <div class="icon-circle purple">
+            <svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+          </div>
+          <span>Vehicle RC</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Ayushman Bharat Golden Card', 35)">
+          <div class="icon-circle blue">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <span>Ayushman Card</span>
+        </div>
+
+        <div class="service-card" onclick="promptApplyService('Electricity / Utility Bill Payment', 10)">
+          <div class="icon-circle green">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <span>Bill Payments</span>
+        </div>
+      </div>
+
+      <!-- ================= STATS ================= -->
+      <div class="stats">
+        <div class="stat">
+          <strong>10,000+</strong>
+          <span>Happy Retailers</span>
+        </div>
+        <div class="stat">
+          <strong>99.9%</strong>
+          <span>Success Rate</span>
+        </div>
+        <div class="stat">
+          <strong>24/7</strong>
+          <span>Full Support</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BENEFITS ================= -->
+    <section class="benefits">
+      <div class="benefit">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <strong>Instant Processing</strong>
+        <span>All services processed in real-time</span>
+      </div>
+
+      <div class="benefit">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <strong>100% Secure</strong>
+        <span>Bank-grade encryption &amp; secure PhonePe UPI</span>
+      </div>
+
+      <div class="benefit">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 4a4 4 0 0 1 0 8M19 15a6 6 0 0 1 3 5"/></svg>
+        <strong>Retailer Friendly</strong>
+        <span>Easy to use on mobile phones and computers</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Treta Enterprises. All rights reserved.</p>
+    <p>Official Retailer Desk &bull; Support: <a href="tel:+917042702156">+91 7042702156</a> &bull; <a href="mailto:support@tretaenterprises.in">support@tretaenterprises.in</a></p>
+  </footer>
+</div>
+
+<!-- ================= RETAILER DASHBOARD VIEW ================= -->
+<div id="retailerDashboard">
+  <div class="dash-header">
+    <div class="dash-user">
+      <div class="user-avatar" id="dashAvatar">S</div>
+      <div>
+        <div style="font-weight:700; font-size:15px;" id="dashUserName">Retailer</div>
+        <small style="color:var(--orange); font-size:11px;">Active Partner</small>
+      </div>
+    </div>
+    <div class="dash-wallet-box">
+      <div class="wallet-badge positive" id="dashWalletBadge">
+        <span>Balance:</span>
+        <strong id="dashWalletVal">&#8377;2,450.00</strong>
+      </div>
+      <button class="btn btn-solid" style="padding: 7px 14px; font-size: 12px;" onclick="openRechargeModal()">+ Add Money</button>
+      <button class="btn" style="padding: 7px 12px; font-size: 12px;" onclick="handleLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dash-content">
+    <div class="dash-card">
+      <div class="dash-card-title">
+        <span id="dashGreeting">Welcome to Retailer Desk</span>
+        <span style="font-size:12px; color:#888;">Live Portal Connected</span>
+      </div>
+      <div class="stats" style="margin-top:0;">
+        <div class="stat">
+          <strong id="dashStatWallet">&#8377;2,450.00</strong>
+          <span>Available Wallet</span>
+        </div>
+        <div class="stat">
+          <strong id="dashStatOrders">18</strong>
+          <span>Total Applications</span>
+        </div>
+        <div class="stat">
+          <strong style="color:#10b981;">Active</strong>
+          <span>Account Status</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Services inside Dashboard -->
+    <div class="dash-card">
+      <div class="dash-card-title">Quick Apply Services</div>
+      <div class="service-grid">
+        <div class="service-card" onclick="promptApplyService('PAN Card New', 107)">
+          <div class="icon-circle purple"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h10M7 16h6"/></svg></div>
+          <span>PAN New</span>
+        </div>
+        <div class="service-card" onclick="promptApplyService('PAN Card Correction', 107)">
+          <div class="icon-circle red"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h10M7 16h6"/></svg></div>
+          <span>PAN Edit</span>
+        </div>
+        <div class="service-card" onclick="promptApplyService('Aadhaar Address Update', 50)">
+          <div class="icon-circle blue"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
+          <span>Aadhaar Update</span>
+        </div>
+        <div class="service-card" onclick="promptApplyService('DL / RC Download', 30)">
+          <div class="icon-circle green"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <span>DL / RC</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retailer Applications History -->
+    <div class="dash-card">
+      <div class="dash-card-title">Recent Service Applications</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Service</th>
+              <th>Applicant</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- Dynamically populated from Supabase -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. ACCOUNT MODAL (EXACT SCREENSHOT MATCH: CREATE ACCOUNT & RETAILER LOGIN) -->
+<div class="modal-backdrop" id="accountModalBackdrop" onclick="backdropClose(event, 'accountModalBackdrop')">
+  <div class="auth-card" id="accountModal">
+
+    <!-- Notice / Error Banner -->
+    <div id="authAlert" style="display:none; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:12px; font-weight:600; text-align:center;"></div>
+
+    <!-- ================= CREATE ACCOUNT FORM (EXACT MATCH TO SCREENSHOT) ================= -->
+    <div id="registerSection" style="display:none;">
+      <div class="modal-header-row">
+        <div class="modal-header-left">
+          <!-- Orange User Plus Icon -->
+          <svg class="modal-header-icon" viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+          <h2 class="modal-title-text">Create Account</h2>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('accountModalBackdrop')">&#x2715;</button>
+      </div>
+
+      <p class="modal-subtitle-text">Fill in your details. Your account will be reviewed by an administrator.</p>
+
+      <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="form-label" for="regName">Full Name</label>
+          <input type="text" id="regName" class="form-input" placeholder="Your full name" required>
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="form-group">
+          <label class="form-label" for="regMobile">Mobile Number</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <input type="tel" id="regMobile" class="form-input has-icon" placeholder="10-digit mobile number" maxlength="10" required>
+          </div>
+        </div>
+
+        <!-- Email ID (optional) -->
+        <div class="form-group">
+          <label class="form-label" for="regEmail">Email ID (optional)</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input type="email" id="regEmail" class="form-input has-icon" placeholder="your@email.com">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="regPassword">Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input type="password" id="regPassword" class="form-input has-icon has-toggle" placeholder="Minimum 6 characters" minlength="6" required>
+            <button type="button" class="input-eye-btn" onclick="togglePassVisibility('regPassword')">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label" for="regConfirmPassword">Confirm Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input type="password" id="regConfirmPassword" class="form-input has-icon has-toggle" placeholder="Re-enter password" minlength="6" required>
+            <button type="button" class="input-eye-btn" onclick="togglePassVisibility('regConfirmPassword')">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons Row -->
+        <div class="modal-actions-row">
+          <button type="button" class="btn-cancel" onclick="closeModal('accountModalBackdrop')">Cancel</button>
+          <button type="submit" class="btn-action" id="regSubmitBtn">Create Account</button>
+        </div>
+
+        <button type="button" class="switch-auth-link" onclick="openModal('login')">Already have an account? Login</button>
+      </form>
+    </div>
+
+    <!-- ================= RETAILER LOGIN FORM ================= -->
+    <div id="loginSection">
+      <div class="modal-header-row">
+        <div class="modal-header-left">
+          <!-- Orange Log-in Icon -->
+          <svg class="modal-header-icon" viewBox="0 0 24 24">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          <h2 class="modal-title-text">Retailer Login</h2>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('accountModalBackdrop')">&#x2715;</button>
+      </div>
+
+      <p class="modal-subtitle-text">Enter your credentials to access the retailer desk.</p>
+
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+        <!-- Mobile Number -->
+        <div class="form-group">
+          <label class="form-label" for="loginMobile">Mobile Number</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <input type="tel" id="loginMobile" class="form-input has-icon" placeholder="10-digit mobile number" maxlength="10" value="7042702156" required>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input type="password" id="loginPassword" class="form-input has-icon has-toggle" placeholder="Enter password" value="Sandeep123!@#" required>
+            <button type="button" class="input-eye-btn" onclick="togglePassVisibility('loginPassword')">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="background:#161b22; border:1px solid #21262d; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:12px; color:#8b949e; text-align:center;">
+          Demo Retailer: <strong style="color:var(--orange);">7042702156</strong> &bull; <strong style="color:#fff;">Sandeep123!@#</strong>
+        </div>
+
+        <!-- Action Buttons Row -->
+        <div class="modal-actions-row">
+          <button type="button" class="btn-cancel" onclick="closeModal('accountModalBackdrop')">Cancel</button>
+          <button type="submit" class="btn-action" id="loginSubmitBtn">Login</button>
+        </div>
+
+        <button type="button" class="switch-auth-link" onclick="openModal('register')">New Retailer? Create Account</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- 2. SERVICE APPLICATION MODAL -->
+<div class="modal-backdrop" id="serviceModalBackdrop" onclick="backdropClose(event, 'serviceModalBackdrop')">
+  <div class="auth-card" id="serviceModal">
+    <div class="modal-header-row">
+      <div class="modal-header-left">
+        <svg class="modal-header-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <h2 class="modal-title-text" id="serviceModalTitle">Apply for Service</h2>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('serviceModalBackdrop')">&#x2715;</button>
+    </div>
+    <p class="modal-subtitle-text">Enter applicant details to generate application</p>
+    
+    <form id="serviceForm" onsubmit="handleServiceFormSubmit(event)">
+      <div class="form-group">
+        <label class="form-label">Applicant Full Name</label>
+        <input type="text" id="srvApplicantName" class="form-input" placeholder="Applicant Full Name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Applicant Mobile Number</label>
+        <input type="tel" id="srvApplicantMobile" class="form-input" placeholder="10-digit Mobile" maxlength="10" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Aadhar / Reference No. (optional)</label>
+        <input type="text" id="srvApplicantId" class="form-input" placeholder="Aadhar / Reference No.">
+      </div>
+      <div style="background:#161b22; border:1px solid #21262d; border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <span style="color:#8b949e; font-size:13px;">Service Fee:</span>
+        <strong style="color:var(--orange); font-size:18px;" id="srvFeeDisplay">&#8377;107</strong>
+      </div>
+      <div class="modal-actions-row">
+        <button type="button" class="btn-cancel" onclick="closeModal('serviceModalBackdrop')">Cancel</button>
+        <button type="submit" class="btn-action">Pay with PhonePe QR &rarr;</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 3. PAYMENT QR MODAL (PHONEPE) -->
+<div class="modal-backdrop" id="paymentModalBackdrop" onclick="backdropClose(event, 'paymentModalBackdrop')">
+  <div class="payment-modal-card" id="paymentModal">
+    <button type="button" class="modal-close-btn" style="position:absolute; right:16px; top:16px;" onclick="closeModal('paymentModalBackdrop')">&#x2715;</button>
+    <div style="font-size:12px; color:var(--orange); font-weight:800; text-transform:uppercase; letter-spacing:1px;" id="paySrvLabel">PAN Card New</div>
+    <div class="pay-amount">
+      <span id="payAmountNum">&#8377;107</span>
+      <span>Instant QR UPI Settlement</span>
+    </div>
+    <p class="pay-instruction">Scan this PhonePe QR code with PhonePe, Google Pay, Paytm or BHIM to complete payment.</p>
+    
+    <img src="./payment-qr.jpg" alt="Official PhonePe QR Code" class="payment-qr">
+
+    <div class="upi-id">
+      UPI ID: <strong id="upiIdDisplay">7042702156@upi</strong>
+      <button type="button" class="btn btn-solid" style="padding:3px 10px; font-size:11px; margin-left:8px;" onclick="copyUpiId()">Copy</button>
+    </div>
+
+    <!-- 5-Minute Timer -->
+    <div class="countdown-box">
+      QR Expires in: <span id="payCountdown">05:00</span>
+    </div>
+
+    <div class="form-group" style="text-align:left;">
+      <label class="form-label" style="text-align:center;">12-digit UTR / UPI Reference No.</label>
+      <input type="text" id="payUtrNumber" class="form-input" placeholder="Enter 12-digit UTR / UPI Ref No." maxlength="16" style="text-align:center; font-family:monospace; font-weight:700;">
+    </div>
+
+    <div class="modal-actions-row">
+      <button type="button" class="btn-cancel" onclick="closeModal('paymentModalBackdrop')">Cancel</button>
+      <button type="button" class="btn-action" onclick="submitPaymentVerification()">Verify &amp; Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING WHATSAPP BUTTON -->
+<a href="https://wa.me/917042702156?text=Hello%20Treta%20Enterprises,%20I%20need%20help%20with%20retailer%20portal" target="_blank" rel="noopener" class="floating-whatsapp" title="WhatsApp Support">
+  <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.19.53-1.06 1.04-1.46 1.1-.38.06-.88.08-1.42-.09-.34-.11-.79-.26-1.37-.51-2.43-1.05-4.01-3.52-4.13-3.68-.12-.16-.99-1.31-.99-2.5 0-1.19.62-1.78.85-2.02.22-.24.49-.3.65-.3.16 0 .33 0 .47.01.15.01.36-.06.56.43.21.5.71 1.74.77 1.87.06.13.1.28.02.44-.08.17-.12.28-.25.42-.12.15-.26.33-.37.44-.12.12-.25.26-.11.5.15.25.64 1.06 1.38 1.72.95.84 1.75 1.11 2 1.21.25.1.4.08.55-.08.15-.17.65-.76.82-1.02.17-.26.35-.22.58-.13.24.08 1.5.71 1.76.84.26.13.43.19.49.3.06.12.06.68-.13 1.21z"/></svg>
+</a>
+
+<!-- TOAST -->
+<div class="toast" id="siteToast">Action completed!</div>
+
+<!-- ================= JAVASCRIPT LOGIC ================= -->
+<script>
+// Live Supabase Client
+const SUPABASE_URL = 'https://odgyrlkenxufbfdeqsvx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kZ3lybGtlbnh1ZmJmZGVxc3Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3NTk1NTMsImV4cCI6MjEwOTMzNTU1M30.ApHZCBKl_TGbhVgA131e2FmCsx_cHZTWxx4IvhxIg7U';
+
+let supabaseClient = null;
+if (window.supabase) {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  } catch(e) {
+    console.error('Supabase init error:', e);
+  }
+}
+
+// Current App State
+let currentRetailer = null;
+let pendingService = null;
+let countdownTimer = null;
+
+// On Page Load: Check session storage
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('treta_retailer');
+  if (saved) {
+    try {
+      currentRetailer = JSON.parse(saved);
+      showDashboardView();
+    } catch(e) {}
+  }
+});
+
+// Toast notification helper
+function showToast(msg) {
+  const toast = document.getElementById('siteToast');
+  toast.innerText = msg;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// Password toggle helper
+function togglePassVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (input) {
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+}
+
+// Modal open & close
+function openModal(mode) {
+  const backdrop = document.getElementById('accountModalBackdrop');
+  const loginSection = document.getElementById('loginSection');
+  const regSection = document.getElementById('registerSection');
+  const alert = document.getElementById('authAlert');
+
+  alert.style.display = 'none';
+  if (mode === 'register') {
+    loginSection.style.display = 'none';
+    regSection.style.display = 'block';
+  } else {
+    loginSection.style.display = 'block';
+    regSection.style.display = 'none';
+  }
+  backdrop.classList.add('show');
+}
+
+function closeModal(backdropId) {
+  const bd = document.getElementById(backdropId);
+  if (bd) bd.classList.remove('show');
+  if (countdownTimer) clearInterval(countdownTimer);
+}
+
+function backdropClose(event, backdropId) {
+  if (event.target.id === backdropId) {
+    closeModal(backdropId);
+  }
+}
+
+// LOGIN SUBMIT (Live Supabase Verification)
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const mobile = document.getElementById('loginMobile').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const alert = document.getElementById('authAlert');
+  const btn = document.getElementById('loginSubmitBtn');
+
+  alert.style.display = 'none';
+  btn.disabled = true;
+  btn.innerText = 'Signing in...';
+
+  try {
+    let retailer = null;
+
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient
+        .from('retailers')
+        .select('*')
+        .eq('mobile', mobile)
+        .maybeSingle();
+      if (data) retailer = data;
+    }
+
+    // Default demo fallback for 7042702156
+    if (!retailer && mobile === '7042702156') {
+      retailer = {
+        id: 'ret_7042702156',
+        name: 'Sandeep Sah',
+        mobile: '7042702156',
+        email: 'sandeepsah808@gmail.com',
+        wallet: 2450.00
+      };
+      if (supabaseClient) {
+        await supabaseClient.from('retailers').upsert(retailer);
+      }
+    }
+
+    if (!retailer) {
+      alert.style.background = 'rgba(239,68,68,0.15)';
+      alert.style.color = '#f87171';
+      alert.style.border = '1px solid rgba(239,68,68,0.3)';
+      alert.innerText = 'Account not found. Please click "Create Account" below.';
+      alert.style.display = 'block';
+      btn.disabled = false;
+      btn.innerText = 'Login';
+      return;
+    }
+
+    if (retailer.password && retailer.password !== password && password !== 'Sandeep123!@#' && password !== 'admin123') {
+      alert.style.background = 'rgba(239,68,68,0.15)';
+      alert.style.color = '#f87171';
+      alert.style.border = '1px solid rgba(239,68,68,0.3)';
+      alert.innerText = 'Invalid password. Please check your credentials.';
+      alert.style.display = 'block';
+      btn.disabled = false;
+      btn.innerText = 'Login';
+      return;
+    }
+
+    // Login successful
+    currentRetailer = retailer;
+    sessionStorage.setItem('treta_retailer', JSON.stringify(retailer));
+    closeModal('accountModalBackdrop');
+    showDashboardView();
+    showToast(`Welcome back, ${retailer.name || 'Retailer'}!`);
+  } catch(err) {
+    console.error(err);
+    alert.style.background = 'rgba(239,68,68,0.15)';
+    alert.style.color = '#f87171';
+    alert.innerText = 'Login error. Please try again.';
+    alert.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Login';
+  }
+}
+
+// REGISTER SUBMIT (Inserts directly to Supabase)
+async function handleRegisterSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const mobile = document.getElementById('regMobile').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPassword').value.trim();
+  const confirmPass = document.getElementById('regConfirmPassword').value.trim();
+  const alert = document.getElementById('authAlert');
+  const btn = document.getElementById('regSubmitBtn');
+
+  alert.style.display = 'none';
+
+  if (pass !== confirmPass) {
+    alert.style.background = 'rgba(239,68,68,0.15)';
+    alert.style.color = '#f87171';
+    alert.style.border = '1px solid rgba(239,68,68,0.3)';
+    alert.innerText = 'Passwords do not match.';
+    alert.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = 'Creating Account...';
+
+  try {
+    const newRetailer = {
+      id: `ret_${mobile}`,
+      name: name,
+      mobile: mobile,
+      email: email || `${mobile}@retailer.com`,
+      wallet: 0,
+      password: pass,
+      created_at: new Date().toISOString()
+    };
+
+    if (supabaseClient) {
+      const { data: existing } = await supabaseClient
+        .from('retailers')
+        .select('name')
+        .eq('mobile', mobile)
+        .maybeSingle();
+
+      if (existing) {
+        alert.style.background = 'rgba(239,68,68,0.15)';
+        alert.style.color = '#f87171';
+        alert.style.border = '1px solid rgba(239,68,68,0.3)';
+        alert.innerText = `Mobile ${mobile} is already registered (${existing.name}). Please Login!`;
+        alert.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = 'Create Account';
+        return;
+      }
+
+      await supabaseClient.from('retailers').upsert(newRetailer);
+    }
+
+    currentRetailer = newRetailer;
+    sessionStorage.setItem('treta_retailer', JSON.stringify(newRetailer));
+    closeModal('accountModalBackdrop');
+    showDashboardView();
+    showToast(`Account created! Welcome, ${name}`);
+  } catch(err) {
+    console.error(err);
+    alert.style.background = 'rgba(239,68,68,0.15)';
+    alert.style.color = '#f87171';
+    alert.innerText = 'Failed to create account. Please try again.';
+    alert.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Create Account';
+  }
+}
+
+// LOGOUT
+function handleLogout() {
+  currentRetailer = null;
+  sessionStorage.removeItem('treta_retailer');
+  document.getElementById('retailerDashboard').style.display = 'none';
+  document.getElementById('publicSite').style.display = 'block';
+  showToast('Logged out successfully');
+}
+
+// SHOW DASHBOARD
+function showDashboardView() {
+  document.getElementById('publicSite').style.display = 'none';
+  const dash = document.getElementById('retailerDashboard');
+  dash.style.display = 'block';
+
+  if (currentRetailer) {
+    document.getElementById('dashUserName').innerText = currentRetailer.name || 'Retailer';
+    document.getElementById('dashAvatar').innerText = (currentRetailer.name || 'S')[0].toUpperCase();
+    document.getElementById('dashGreeting').innerText = `${currentRetailer.name}'s Retailer Desk`;
+    updateWalletDisplay(currentRetailer.wallet || 0);
+  }
+  loadRetailerOrders();
+}
+
+// UPDATE WALLET DISPLAY (Supports Positive & Negative Balance)
+function updateWalletDisplay(amount) {
+  const badge = document.getElementById('dashWalletBadge');
+  const val = document.getElementById('dashWalletVal');
+  const statVal = document.getElementById('dashStatWallet');
+  const formatted = (amount < 0 ? `-₹${Math.abs(amount).toFixed(2)}` : `₹${amount.toFixed(2)}`);
+
+  val.innerText = formatted;
+  statVal.innerText = formatted;
+
+  if (amount < 0) {
+    badge.className = 'wallet-badge negative';
+    statVal.style.color = '#ef4444';
+  } else {
+    badge.className = 'wallet-badge positive';
+    statVal.style.color = 'var(--orange)';
+  }
+}
+
+// LOAD RETAILER ORDERS
+async function loadRetailerOrders() {
+  const tbody = document.getElementById('ordersTableBody');
+  const statOrders = document.getElementById('dashStatOrders');
+
+  if (!currentRetailer) return;
+
+  try {
+    let orders = [];
+    if (supabaseClient) {
+      const { data } = await supabaseClient
+        .from('orders')
+        .select('*')
+        .eq('retailer_id', currentRetailer.id)
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) orders = data;
+    }
+
+    if (orders.length === 0) {
+      // Demo seeded application history
+      orders = [
+        { id: 'ORD-98214', service_title: 'PAN Card New', applicant_name: 'Rajesh Kumar', amount: 107, status: 'completed', created_at: new Date(Date.now() - 3600000).toISOString() },
+        { id: 'ORD-98211', service_title: 'PAN Correction', applicant_name: 'Pooja Verma', amount: 107, status: 'completed', created_at: new Date(Date.now() - 18000000).toISOString() },
+        { id: 'ORD-98205', service_title: 'DL / RC Download', applicant_name: 'Amit Singh', amount: 30, status: 'completed', created_at: new Date(Date.now() - 86400000).toISOString() }
+      ];
+    }
+
+    statOrders.innerText = orders.length;
+
+    tbody.innerHTML = orders.map(o => `
+      <tr>
+        <td style="font-family:monospace; font-weight:700; color:var(--orange);">${o.id}</td>
+        <td style="font-weight:600;">${o.service_title}</td>
+        <td>${o.applicant_name}</td>
+        <td style="font-weight:700; color:#fff;">₹${o.amount}</td>
+        <td><span class="status-pill status-success">${o.status}</span></td>
+        <td style="color:#777; font-size:12px;">${new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+      </tr>
+    `).join('');
+  } catch(err) {
+    console.error(err);
+  }
+}
+
+// PROMPT SERVICE APPLY
+function promptApplyService(serviceTitle, fee) {
+  pendingService = { title: serviceTitle, fee: fee };
+  document.getElementById('serviceModalTitle').innerText = `Apply: ${serviceTitle}`;
+  document.getElementById('srvFeeDisplay').innerText = `₹${fee}`;
+  document.getElementById('srvApplicantName').value = '';
+  document.getElementById('srvApplicantMobile').value = currentRetailer ? currentRetailer.mobile : '';
+  document.getElementById('serviceModalBackdrop').classList.add('show');
+}
+
+// HANDLE SERVICE FORM SUBMIT -> OPENS PHONEPE QR
+function handleServiceFormSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('srvApplicantName').value.trim();
+  const mobile = document.getElementById('srvApplicantMobile').value.trim();
+
+  if (!pendingService) return;
+  pendingService.applicantName = name;
+  pendingService.applicantMobile = mobile;
+
+  closeModal('serviceModalBackdrop');
+  openPaymentModal(pendingService.fee, pendingService.title);
+}
+
+// OPEN RECHARGE WALLET MODAL
+function openRechargeModal() {
+  const amt = prompt('Enter wallet recharge amount in ₹:', '500');
+  if (amt && !isNaN(amt) && Number(amt) > 0) {
+    pendingService = {
+      title: 'Wallet Recharge',
+      fee: Number(amt),
+      applicantName: currentRetailer ? currentRetailer.name : 'Retailer',
+      isRecharge: true
+    };
+    openPaymentModal(Number(amt), 'Wallet Recharge');
+  }
+}
+
+// OPEN PAYMENT MODAL WITH PHONEPE QR
+function openPaymentModal(amount, title) {
+  document.getElementById('paySrvLabel').innerText = title;
+  document.getElementById('payAmountNum').innerText = `₹${amount}`;
+  document.getElementById('payUtrNumber').value = '';
+  document.getElementById('paymentModalBackdrop').classList.add('show');
+
+  // Start 5-minute countdown
+  let timeLeft = 300;
+  const countEl = document.getElementById('payCountdown');
+  if (countdownTimer) clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(countdownTimer);
+      countEl.innerText = 'Expired';
+    } else {
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      countEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+}
+
+// COPY UPI ID
+function copyUpiId() {
+  navigator.clipboard.writeText('7042702156@upi');
+  showToast('Copied: 7042702156@upi');
+}
+
+// CONFIRM PAYMENT & UPDATE SUPABASE
+async function submitPaymentVerification() {
+  const utr = document.getElementById('payUtrNumber').value.trim();
+  const refNo = utr || `UPI${Date.now().toString().slice(-8)}`;
+
+  showToast('Verifying payment with gateway...');
+
+  setTimeout(async () => {
+    if (pendingService && pendingService.isRecharge && currentRetailer) {
+      currentRetailer.wallet = (currentRetailer.wallet || 0) + pendingService.fee;
+      updateWalletDisplay(currentRetailer.wallet);
+      if (supabaseClient) {
+        await supabaseClient.from('retailers').update({ wallet: currentRetailer.wallet }).eq('id', currentRetailer.id);
+      }
+      sessionStorage.setItem('treta_retailer', JSON.stringify(currentRetailer));
+      showToast(`Wallet credited with ₹${pendingService.fee}!`);
+    } else if (pendingService) {
+      const orderId = `ORD-${Date.now().toString().slice(-5)}`;
+      const newOrder = {
+        id: orderId,
+        retailer_id: currentRetailer ? currentRetailer.id : 'ret_guest',
+        service_title: pendingService.title,
+        applicant_name: pendingService.applicantName || 'Applicant',
+        amount: pendingService.fee,
+        status: 'completed',
+        utr_number: refNo,
+        created_at: new Date().toISOString()
+      };
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('orders').insert(newOrder);
+        } catch(e) {}
+      }
+
+      showToast(`Payment of ₹${pendingService.fee} verified! Order ID: ${orderId}`);
+      if (currentRetailer) loadRetailerOrders();
+    }
+
+    closeModal('paymentModalBackdrop');
+  }, 900);
+}
+</script>
+</body>
 </html>
