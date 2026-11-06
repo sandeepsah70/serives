@@ -483,18 +483,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   setError(null)
                   setSuccess(null)
                 }}
-                className="flex-1 h-[42px] border border-white/15 hover:bg-white/5 text-white/80 font-semibold text-sm rounded-lg transition-all"
+                className="flex-1 h-[42px] bg-transparent hover:bg-white/5 border border-[#1f2937] text-white/70 font-semibold text-sm rounded-lg transition-all"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 h-[42px] bg-[#F26700] hover:bg-[#d95c00] text-white font-bold text-sm rounded-lg shadow-lg shadow-[#F26700]/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 h-[42px] bg-[#F26700] hover:bg-[#e05e00] text-black font-bold text-sm rounded-lg shadow-lg shadow-[#F26700]/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin text-black" />
                     <span>Creating...</span>
                   </>
                 ) : (
