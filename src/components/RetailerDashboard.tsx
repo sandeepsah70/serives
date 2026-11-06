@@ -462,32 +462,88 @@ export const RetailerDashboard: React.FC<RetailerDashboardProps> = ({
             </button>
           </nav>
 
-          {/* Quick Services Section with Colored Bullets */}
+          {/* Quick Services Section with Colored Bullets (Exact from PDF Page 6) */}
           <div className="px-4 mt-6 pt-4 border-t border-[#222222]">
-            <span className="text-[10px] uppercase font-bold text-[#777777] tracking-wider block mb-2">
-              Quick Services
+            <span className="text-[10px] uppercase font-bold text-[#777777] tracking-wider block mb-2.5">
+              QUICK SERVICES
             </span>
-            <div className="space-y-1.5 text-[11px] text-[#aaaaaa]">
+            <div className="space-y-2 text-[11px] text-[#aaaaaa]">
               <div
                 onClick={() => handleOpenApply(SERVICES_LIST[2])}
                 className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                <span>New PAN Card</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                <span>PAN Card New</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[0])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span>Without Birth Proof PAN</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[1])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                <span>PAN Finder</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[3])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                <span>PAN Card Correction</span>
               </div>
               <div
                 onClick={() => handleOpenApply(SERVICES_LIST[5])}
                 className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
                 <span>DL PDF Download</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[6])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                <span>RC PDF Download</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[7])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                <span>Learning License Exam</span>
               </div>
               <div
                 onClick={() => handleOpenApply(SERVICES_LIST[8])}
                 className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                <span>TEC Certificate</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span>TEC Exam Certificate</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[2])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                <span>PAN Card New (Documents)</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[3])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                <span>PAN Card Correction (Documents)</span>
+              </div>
+              <div
+                onClick={() => handleOpenApply(SERVICES_LIST[0])}
+                className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span>Without Birth Proof PAN (Documents)</span>
               </div>
             </div>
           </div>

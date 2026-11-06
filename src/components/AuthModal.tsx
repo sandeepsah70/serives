@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import {
+  Phone,
+  Lock,
+  Mail,
+  UserPlus,
   Eye,
   EyeOff,
   Loader2,
   AlertCircle,
   CheckCircle,
   X,
-  ArrowLeft,
-  KeyRound,
-  MessageCircle
+  KeyRound
 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { Retailer } from '../types'
@@ -28,19 +30,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode)
 
-  // Login form state
+  // Login form state (Page 4 of PDF)
   const [loginMobile, setLoginMobile] = useState('7042702156')
   const [loginPassword, setLoginPassword] = useState('Sandeep123!@#')
   const [showLoginPassword, setShowLoginPassword] = useState(false)
 
-  // Register form state (exact tretaenterprises.shop/members/createaccount fields)
+  // Register form state (Page 3 of PDF)
   const [name, setName] = useState('')
-  const [shopName, setShopName] = useState('')
-  const [userType, setUserType] = useState<'Retailer' | 'Distributor' | 'Master Distributor'>('Retailer')
   const [mobile, setMobile] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,14 +53,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }, [initialMode, isOpen])
 
   if (!isOpen) return null
-
-  // Dynamic activation charge matching tretaenterprises.shop
-  const getActivationCharge = (type: string) => {
-    if (type === 'Retailer') return 'Activation Charge ₹ 00'
-    if (type === 'Distributor') return 'Activation Charge ₹ 99'
-    if (type === 'Master Distributor') return 'Activation Charge ₹ 199'
-    return 'Activation Charge ₹ 00'
-  }
 
   const handleFillDemo = () => {
     setLoginMobile('7042702156')
@@ -117,9 +109,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           name: 'Sandeep Sah',
           mobile: '7042702156',
           email: 'sandeepsah808@gmail.com',
-          shop_name: 'Treta Enterprises Store',
-          user_type: 'Retailer',
-          password: 'Sandeep123!@#',
           wallet: 2450,
           created_at: new Date().toISOString()
         }
@@ -132,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         return
       }
 
-      setError('No account found for this mobile. Click "Create Account?" below to register!')
+      setError('No account found for this mobile number. Please click "Create Account?" below.')
     } catch (err: unknown) {
       console.error(err)
       setError('Connection error. Please try again.')
@@ -141,30 +130,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }
 
-  // 2. REGISTER SUBMIT
+  // 2. REGISTER SUBMIT (EXACT MATCH TO PDF PAGE 3)
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
 
     if (!name.trim()) {
-      setError('Please enter Your Name.')
-      return
-    }
-    if (!shopName.trim()) {
-      setError('Please enter Shop Name.')
+      setError('Please enter your full name.')
       return
     }
     if (!mobile.trim() || mobile.trim().length < 10) {
-      setError('Please enter a valid 10-digit WhatsApp/Mobile Number.')
+      setError('Please enter a valid 10-digit mobile number.')
       return
     }
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid Email Address.')
-      return
-    }
-    if (!password.trim() || password.length < 6) {
+    if (password.length < 6) {
       setError('Password must be at least 6 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
@@ -179,7 +164,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         .maybeSingle()
 
       if (existing) {
-        setError(`Mobile ${cleanMobile} is already registered (${existing.name}). Please Login!`)
+        setError(`Mobile number ${cleanMobile} is already registered (${existing.name}). Please Login!`)
         setLoading(false)
         return
       }
@@ -187,28 +172,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const newRetailer: Retailer = {
         id: `ret_${cleanMobile}`,
         name: name.trim(),
-        shop_name: shopName.trim(),
-        user_type: userType,
         mobile: cleanMobile,
-        email: email.trim(),
-        password: password.trim(),
+        email: email.trim() || `${cleanMobile}@retailer.com`,
         wallet: 0,
+        password: password.trim(),
         created_at: new Date().toISOString()
       }
 
-      const { error: insertErr } = await supabase.from('retailers').insert([newRetailer])
-      if (insertErr) {
-        console.warn('Insert error fallback:', insertErr)
-        await supabase.from('retailers').upsert({
-          id: newRetailer.id,
-          name: newRetailer.name,
-          mobile: newRetailer.mobile,
-          email: newRetailer.email,
-          wallet: 0
-        })
-      }
+      await supabase.from('retailers').upsert(newRetailer)
 
-      setSuccess(`Account Created Successfully! Welcome, ${name.trim()}`)
+      setSuccess(`Account created successfully! Welcome, ${name.trim()}`)
       setTimeout(() => {
         onSuccess(newRetailer)
         onClose()
@@ -222,328 +195,287 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050505]/95 backdrop-blur-md overflow-y-auto animate-in fade-in select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-y-auto animate-in fade-in select-none">
       {/* =========================================================================
-          VIEW A: LOGIN SCREEN (Exact replica of tretaenterprises.shop/members/login)
+          VIEW A: LOGIN SCREEN (EXACT REPLICA OF PDF PAGE 4)
           ========================================================================= */}
       {mode === 'login' && (
-        <div className="relative w-full max-w-[420px] bg-[#101114] border border-[#292c33] rounded-[16px] p-6 sm:p-10 shadow-[0_15px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(0,174,255,0.08)] text-white my-auto max-h-[92vh] overflow-y-auto">
-          {/* Close button */}
+        <div className="relative flex flex-col items-center w-full max-w-[370px] my-auto">
+          {/* Close Button */}
           <button
             onClick={onClose}
+            className="absolute -top-10 right-0 p-1.5 text-white/50 hover:text-white rounded-full transition-colors"
             aria-label="Close"
-            className="absolute top-4 right-4 text-[#8f939c] hover:text-white p-1 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
 
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="flex justify-center mb-3">
-              <div className="w-[74px] h-[74px] sm:w-[80px] sm:h-[80px] bg-[#17191d] border border-[#33363d] rounded-full p-2 flex items-center justify-center shadow-[0_0_20px_rgba(0,174,255,0.15)]">
-                <img
-                  src="./treta-hero-logo.png"
-                  alt="Treta Print Portal"
-                  className="w-full h-full object-contain"
-                />
+          {/* Logo Card with subtle orange glow */}
+          <div className="mb-3 flex justify-center relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#F26700]/25 blur-2xl rounded-full pointer-events-none" />
+            <div className="p-3 bg-[#0d0906] border border-[#26180e] rounded-2xl shadow-2xl relative z-10 inline-block">
+              <img
+                src="./treta-hero-logo.png"
+                alt="Treta Enterprises"
+                className="h-20 w-20 object-contain"
+              />
+            </div>
+          </div>
+
+          <h1 className="text-2xl font-bold text-white tracking-tight text-center">
+            Treta Enterprises
+          </h1>
+          <p className="text-white/50 mt-1 text-xs sm:text-sm mb-6 text-center">
+            Retailer Login Portal
+          </p>
+
+          {/* Login Card (Exact match to PDF Page 4) */}
+          <div className="w-full bg-[#0a0705] rounded-2xl shadow-2xl border border-[#2a1d13] p-6 text-white">
+            {/* Quick Demo Fill Pill */}
+            <div className="mb-4 bg-white/5 border border-[#F26700]/30 rounded-xl p-2.5 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-white font-semibold block text-[11px]">Retailer Login:</span>
+                <span className="text-[#F26700] font-mono text-[11px]">7042702156 / Sandeep123!@#</span>
               </div>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-1">
-              Sign In
-            </h1>
-            <p className="text-xs sm:text-sm text-[#aeb2bb]">
-              Welcome back, please login to your account.
-            </p>
-          </div>
-
-          {/* Demo Login Pill */}
-          <div className="mb-4 bg-[#191b20] border border-[#00aeff]/30 rounded-xl p-2.5 flex items-center justify-between text-xs">
-            <div>
-              <span className="text-white font-semibold block text-[11px]">Retailer Login:</span>
-              <span className="text-[#49c8ff] font-mono text-[11px]">7042702156 / Sandeep123!@#</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="flex items-center gap-1 bg-[#007bff] hover:bg-[#00aeff] text-white px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all shadow-sm active:scale-95"
-            >
-              <KeyRound size={11} />
-              <span>Fill</span>
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-2.5 sm:p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 p-2.5 sm:p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center gap-2">
-              <CheckCircle size={15} className="shrink-0" />
-              <span>{success}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <div>
-              <input
-                type="tel"
-                name="username"
-                placeholder="Mobile Number"
-                maxLength={10}
-                value={loginMobile}
-                onChange={(e) => setLoginMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <input
-                type={showLoginPassword ? 'text' : 'password'}
-                name="password"
-                placeholder="Password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value.replace(/\s/g, ''))}
-                className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full pl-5 pr-12 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
-                required
-              />
               <button
                 type="button"
-                onClick={() => setShowLoginPassword(!showLoginPassword)}
-                className="absolute right-4 top-3 text-[#b8bcc5] hover:text-[#00b7ff] transition-colors"
-                aria-label="Toggle password"
+                onClick={handleFillDemo}
+                className="flex items-center gap-1 bg-[#F26700] hover:bg-[#d95c00] text-white px-2 py-1 rounded-lg text-[10px] font-semibold transition-all active:scale-95"
               >
-                {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <KeyRound size={11} />
+                <span>Fill</span>
               </button>
             </div>
 
-            <div className="pt-2">
+            {error && (
+              <div className="mb-4 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-2.5 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center gap-2">
+                <CheckCircle size={15} className="shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              {/* Mobile Number */}
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-white/40" />
+                <input
+                  type="tel"
+                  placeholder="Mobile Number"
+                  maxLength={10}
+                  value={loginMobile}
+                  onChange={(e) => setLoginMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full h-11 pl-10 pr-3.5 bg-[#140f0b] border border-[#332216] focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] rounded-xl text-sm text-white placeholder:text-white/35 outline-none transition-all"
+                  required
+                />
+              </div>
+
+              {/* Password */}
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-white/40" />
+                <input
+                  type={showLoginPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value.replace(/\s/g, ''))}
+                  className="w-full h-11 pl-10 pr-10 bg-[#140f0b] border border-[#332216] focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] rounded-xl text-sm text-white placeholder:text-white/35 outline-none transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3.5 top-3.5 text-white/40 hover:text-white transition-colors"
+                  aria-label="Toggle password"
+                >
+                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+
+              {/* Login Button (Solid Orange #F26700) */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-[44px] bg-gradient-to-r from-[#007bff] to-[#00b7ff] hover:opacity-95 text-white font-semibold text-sm rounded-full flex items-center justify-center gap-2 shadow-[0_7px_22px_rgba(0,174,255,0.25)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50"
+                className="w-full h-11 bg-[#F26700] hover:bg-[#d95c00] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[#F26700]/30 active:scale-95 transition-all disabled:opacity-50"
               >
                 {loading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    <span>Signing In...</span>
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   <span>Login</span>
                 )}
               </button>
-            </div>
 
-            <div className="flex items-center justify-between text-xs pt-3 text-[#aeb2bb]">
-              <button
-                type="button"
-                onClick={() => alert('Please contact admin at 7042702156 to reset password.')}
-                className="text-[#36c5ff] hover:text-[#7cdbff] transition-colors"
-              >
-                Forgot Password?
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('register')
-                  setError(null)
-                  setSuccess(null)
-                }}
-                className="text-[#36c5ff] hover:text-[#7cdbff] font-semibold transition-colors"
-              >
-                Create Account?
-              </button>
-            </div>
-          </form>
+              {/* Links: Forgot Password? | Create Account? */}
+              <div className="flex items-center justify-center gap-3 text-xs pt-2">
+                <button
+                  type="button"
+                  onClick={() => alert('Please contact admin at 7042702156 to reset your password.')}
+                  className="text-[#F26700] hover:underline"
+                >
+                  Forgot Password?
+                </button>
+                <span className="text-white/30">|</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('register')
+                    setError(null)
+                    setSuccess(null)
+                  }}
+                  className="text-[#F26700] hover:underline font-semibold"
+                >
+                  Create Account?
+                </button>
+              </div>
+            </form>
+          </div>
 
-          <footer className="mt-8 pt-4 border-t border-white/5 text-center text-[11px] text-[#8f939c]">
-            Copyright 2026 Treta Print Portal . All Rights Reserved.
-          </footer>
+          <div className="text-center mt-6 text-xs text-white/30">
+            Copyright 2026 Treta Enterprises. All Rights Reserved.
+          </div>
         </div>
       )}
 
       {/* =========================================================================
-          VIEW B: CREATE ACCOUNT SCREEN (Exact replica of tretaenterprises.shop/members/createaccount)
+          VIEW B: CREATE ACCOUNT MODAL (EXACT REPLICA OF PDF PAGE 3)
           ========================================================================= */}
       {mode === 'register' && (
-        <div className="relative w-full max-w-[900px] bg-[#101114] border border-[#292c33] rounded-[16px] p-5 sm:p-8 md:p-10 shadow-[0_15px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(0,174,255,0.06)] text-white my-auto max-h-[94vh] overflow-y-auto">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute top-4 right-4 text-[#8f939c] hover:text-white p-1 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
-
-          {/* Header */}
-          <div className="text-center mb-6 sm:mb-8">
-            <div className="flex justify-center mb-3">
-              <div className="w-[74px] h-[74px] sm:w-[80px] sm:h-[80px] bg-[#17191d] border border-[#33363d] rounded-full p-2 flex items-center justify-center shadow-[0_0_20px_rgba(0,174,255,0.12)]">
-                <img
-                  src="./treta-hero-logo.png"
-                  alt="Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+        <div className="relative w-full max-w-[430px] bg-[#080c14] border border-[#1c2333] rounded-2xl p-6 sm:p-7 text-white shadow-2xl my-auto animate-in zoom-in-95 duration-150 max-h-[94vh] overflow-y-auto">
+          {/* Header with UserPlus icon & Close button */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <UserPlus className="h-5 w-5 text-[#F26700]" />
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                Create Account
+              </h2>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-white">
-              Create Account
-            </h1>
+            <button
+              onClick={onClose}
+              className="text-white/40 hover:text-white p-1 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
           </div>
 
+          {/* Subtitle */}
+          <p className="text-white/60 text-xs sm:text-sm mb-5 leading-normal">
+            Fill in your details. Your account will be reviewed by an administrator.
+          </p>
+
           {error && (
-            <div className="mb-5 p-2.5 sm:p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0" />
+            <div className="mb-4 p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle size={14} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-5 p-2.5 sm:p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center gap-2">
-              <CheckCircle size={15} className="shrink-0" />
+            <div className="mb-4 p-2.5 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center gap-2">
+              <CheckCircle size={14} className="shrink-0" />
               <span>{success}</span>
             </div>
           )}
 
-          {/* Form Grid: 1 col on mobile, 3 cols on tablet/desktop */}
-          <form onSubmit={handleRegisterSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 mb-6 sm:mb-8">
-              {/* 1. Your Name */}
-              <div>
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
-                  required
-                />
-              </div>
+          {/* Form matching PDF Page 3 */}
+          <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+            {/* 1. Full Name */}
+            <div>
+              <label className="text-xs font-semibold text-white/80 block mb-1.5">
+                Full Name
+              </label>
+              <input
+                type="text"
+                placeholder="Your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-10 px-3.5 bg-white/5 border border-white/15 rounded-lg text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] transition-all"
+                required
+              />
+            </div>
 
-              {/* 2. Shop Name */}
-              <div>
-                <input
-                  type="text"
-                  placeholder="Shop Name"
-                  name="company"
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
-                  required
-                />
-              </div>
-
-              {/* 3. Select User Type */}
-              <div>
-                <select
-                  name="usertype"
-                  value={userType}
-                  onChange={(e) => setUserType(e.target.value as 'Retailer' | 'Distributor' | 'Master Distributor')}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white outline-none transition-all appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bfc3cb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    backgroundSize: '14px'
-                  }}
-                  required
-                >
-                  <option value="Retailer" className="bg-[#191b20] text-white">Retailer</option>
-                  <option value="Distributor" className="bg-[#191b20] text-white">Distributor</option>
-                  <option value="Master Distributor" className="bg-[#191b20] text-white">Master Distributor</option>
-                </select>
-              </div>
-
-              {/* 4. Activation Charge (Readonly input with input-disabled-color) */}
-              <div>
-                <input
-                  type="text"
-                  value={getActivationCharge(userType)}
-                  readOnly
-                  className="w-full h-[44px] bg-[rgba(0,174,255,0.08)] border border-[rgba(0,174,255,0.45)] text-[#49c8ff] font-bold rounded-full px-5 text-sm outline-none cursor-not-allowed select-none transition-all"
-                />
-              </div>
-
-              {/* 5. WhatsApp Number */}
-              <div>
+            {/* 2. Mobile Number */}
+            <div>
+              <label className="text-xs font-semibold text-white/80 block mb-1.5">
+                Mobile Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 <input
                   type="tel"
-                  placeholder="WhatsApp Number"
-                  name="mobile"
+                  placeholder="10-digit mobile number"
                   maxLength={10}
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
+                  className="w-full h-10 pl-9 pr-3.5 bg-white/5 border border-white/15 rounded-lg text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] transition-all"
                   required
                 />
               </div>
+            </div>
 
-              {/* 6. Email Address */}
-              <div>
+            {/* 3. Email ID (optional) */}
+            <div>
+              <label className="text-xs font-semibold text-white/80 block mb-1.5">
+                Email ID <span className="text-white/40 text-xs font-normal">(optional)</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 <input
                   type="email"
-                  placeholder="Email Address"
-                  name="email"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full px-5 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
-                  required
+                  className="w-full h-10 pl-9 pr-3.5 bg-white/5 border border-white/15 rounded-lg text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] transition-all"
                 />
               </div>
+            </div>
 
-              {/* 7. Enter Password with Eye toggle */}
-              <div className="relative md:col-span-3 lg:col-span-1">
+            {/* 4. Password */}
+            <div>
+              <label className="text-xs font-semibold text-white/80 block mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 <input
-                  type={showRegisterPassword ? 'text' : 'password'}
-                  placeholder="Enter Password"
-                  name="password"
+                  type="password"
+                  placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value.replace(/\s/g, ''))}
-                  className="w-full h-[44px] bg-[#191b20] border border-[#363941] hover:border-[#4a4e57] focus:border-[#00aeff] focus:bg-[#1c1e23] focus:ring-2 focus:ring-[#00aeff]/20 rounded-full pl-5 pr-12 text-sm text-white placeholder-[#aeb2bb] outline-none transition-all"
+                  className="w-full h-10 pl-9 pr-3.5 bg-white/5 border border-white/15 rounded-lg text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] transition-all"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                  className="absolute right-4 top-3 text-[#b8bcc5] hover:text-[#00b7ff] transition-colors"
-                  aria-label="Toggle Password"
-                >
-                  {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
             </div>
 
-            {/* Create Account Button */}
-            <div className="flex justify-center mb-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full sm:w-[220px] h-[44px] bg-gradient-to-r from-[#007bff] to-[#00b7ff] hover:opacity-95 text-white font-semibold text-sm rounded-full flex items-center justify-center gap-2 shadow-[0_7px_22px_rgba(0,174,255,0.25)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Creating Account...</span>
-                  </>
-                ) : (
-                  <span>Create Account</span>
-                )}
-              </button>
+            {/* 5. Confirm Password */}
+            <div>
+              <label className="text-xs font-semibold text-white/80 block mb-1.5">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                <input
+                  type="password"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ''))}
+                  className="w-full h-10 pl-9 pr-3.5 bg-white/5 border border-white/15 rounded-lg text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#F26700] focus:ring-1 focus:ring-[#F26700] transition-all"
+                  required
+                />
+              </div>
             </div>
 
-            {/* Copyright */}
-            <div className="text-center text-[11px] text-[#8f939c] mb-3">
-              © 2026 All Rights Reserved.
-            </div>
-
-            {/* Back to Login Button */}
-            <div className="flex justify-center">
+            {/* Bottom Buttons: Cancel & Create Account */}
+            <div className="flex items-center gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => {
@@ -551,24 +483,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   setError(null)
                   setSuccess(null)
                 }}
-                className="w-[140px] h-[36px] bg-gradient-to-r from-[#007bff] to-[#00b7ff] hover:opacity-95 text-white font-semibold text-xs rounded-full flex items-center justify-center gap-2 shadow-sm hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                className="flex-1 h-[42px] border border-white/15 hover:bg-white/5 text-white/80 font-semibold text-sm rounded-lg transition-all"
               >
-                <ArrowLeft size={13} />
-                <span>Back to Login</span>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 h-[42px] bg-[#F26700] hover:bg-[#d95c00] text-white font-bold text-sm rounded-lg shadow-lg shadow-[#F26700]/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <span>Create Account</span>
+                )}
               </button>
             </div>
           </form>
-
-          {/* Floating Contact Us widget */}
-          <a
-            href="https://wa.me/917042702156"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex fixed bottom-6 right-6 items-center gap-2 bg-gradient-to-r from-[#007bff] to-[#00b7ff] hover:opacity-95 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-[0_7px_22px_rgba(0,174,255,0.35)] hover:-translate-y-0.5 transition-all z-50"
-          >
-            <MessageCircle size={16} />
-            <span>Contact Us</span>
-          </a>
         </div>
       )}
     </div>
